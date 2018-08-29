@@ -1,0 +1,9 @@
+set ORACLE_SID=COPS
+sqlplus -s hp_dbspi/hp_dbspi#1@cops @D:\scripts\Stats_Job_check.sql > D:\scripts\Stats_Job_C_TCD_RunDetails.log
+
+for /f "tokens=*" %%a in ('type D:\scripts\Stats_Job_C_TCD_RunDetails.log ^| find /c ^"FAILED^"') do SET b=%%a
+
+echo %b%
+
+
+(if %b% EQU 0 (echo Succeeded) else (opcmsg severity=Critical application=duVerse msg_grp=DB object=C_TCD msg_text="Incremental Stats Job failed for C_TCD Table on cops Database. Please contact DBA")) 

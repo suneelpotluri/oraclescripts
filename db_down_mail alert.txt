@@ -1,0 +1,23 @@
+bash-3.2$ cat test.sh
+#!/bin/bash
+#set -x
+ ORACLE_HOME=/oracle/ra2s/product/11.2.0
+ ORACLE_SID=ras2pr
+export ORACLE_HOME ORACLE_SID
+check_stat=`ps -ef|grep ras2pr|grep pmon|wc -l`;
+ oracle_num=`expr $check_stat`
+ if [ ${oracle_num} -lt 1 ]
+ then
+ exit 0
+ fi
+${ORACLE_HOME}/bin/sqlplus "/as sysdba" > /tmp/check_$ORACLE_SID.ora <<ENDSCRIPT
+   select name from v\$database;
+ exit
+ENDSCRIPT
+ check_stat=`cat /tmp/check_$ORACLE_SID.ora|grep -i error|wc -l`;
+ oracle_num=`expr $check_stat`
+echo "Before IF" ${oracle_num}
+if [ ${oracle_num} -ne 0 ]
+ then
+(/usr/bin/uuencode /tmp/check_$ORACLE_SID.ora raprod2.txt) | /usr/bin/mailx -s "RAPROD2 is DOWN" sunil.potluri@du.ae
+ fi

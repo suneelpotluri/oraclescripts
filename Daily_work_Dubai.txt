@@ -1,0 +1,30 @@
+SQL>  select SQL_ID,CHILD_NUMBER,NAME,POSITION,VALUE_STRING,to_char(last_captured,'DD/MM/YY HH24:MI:SS') "Last_Captured" from v$sql_bind_capture where LAST_CAPTURED>=sysdate-1 and sql_id='3u4h5z189amdr';
+
+                Chi             Bind
+                 ld Bind        Posi Value
+SQL ID           No Name        tion of Bind         Last_Captured
+------------- ----- ---------- ----- --------------- ---------------------------------------------------------------------------
+3u4h5z189amdr    31 :30           30 25802739        17/05/18 10:54:09
+3u4h5z189amdr     4 :30           30 25825305        17/05/18 10:57:44
+3u4h5z189amdr     3 :30           30 25824528        17/05/18 10:57:08
+3u4h5z189amdr     2 :30           30 25144601        17/05/18 10:55:28
+3u4h5z189amdr     1 :30           30 25820816        17/05/18 10:55:21
+3u4h5z189amdr     0 :30           30 25804432        17/05/18 10:54:13
+
+6 rows selected.
+
+
+https://www.thegeekdiary.com/how-to-roll-forward-a-standby-database-using-rman-incremental-backup-in-11g/
+https://dbakerber.wordpress.com/2011/12/20/incremental-recovery-of-standby-asm-and-rman/
+
+https://community.toadworld.com/platforms/oracle/w/wiki/10481.a-slightly-different-approach-to-roll-forward-standby-database-procedure
+http://www.idevelopment.info/data/Oracle/DBA_tips/Data_Guard/DG_53.shtml --> Good info about using tape for incremental backups.. see in BOXXXX
+http://xsmohitsharma.blogspot.com/2013/09/sync-dr-with-incremental-backup.html#!/2013/09/sync-dr-with-incremental-backup.html
+
+
+Rolling Forward a Physical Standby Using Recover From Service Command in 12c 
+ (Doc ID 1987763.1) 
+ http://dbaclass.com/article/rolling-forward-standby-database-when-archives-missing-in-primary-in-12c/
+ 
+ http://www.oracle.com/technetwork/articles/database/asm-odb12c-enhancements-2206102.html --- ASM 12c Enhancements
+ https://docs.oracle.com/database/121/BRADV/rcmadvre.htm#BRADV-GUID-759D9D57-D638-4557-BBCA-891E898CDC76

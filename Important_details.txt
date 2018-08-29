@@ -1,0 +1,1121 @@
+https://sundar5.wordpress.com/category/oracle-internals/            ==========>>>> Internals
+
+
+Filed under: Inside Controle file — sundar5 @ 10:32 pm 
+
+
+
+select cfnam, (cffsz+1)*cfbsz from x$kcccf;
+
+CFNAM                                (CFFSZ+1)*CFBSZ
+—————————–                         —————
+/u01/database/control01.ctl           29048832
+ /u02/database/control02.ctl           29048832
+ /u03/database/control03.ctl           29048832
+
+SQL>!ls -l /u01/database/control01.ctl
+ -rw-r—–  1 oracle dba 29048832 Feb  1  2010 /u01/database/control01.ctl
+ SQL> !ls -l /u01/database/control01.ctl
+ -rw-r—–  1 oracle dba 29048832 Feb  1  2010 /u02/database/control02.ctl
+ SQL> !ls -l /u03/database/control03.ctl
+ -rw-r—–  1 oracle dba 29048832 Feb  1  2010 /u03/database/control03.ctl
+
+
+Filed under: Oracle internals — sundar5 @ 10:23 pm 
+
+
+
+How to stop on-going trace file dump in the oracle directories.
+
+1. Get the process number from trace file.
+
+Example :
+ -rw-rw—-  1 dba      178684034 Jan 29 17:02 test2_diag_18701.trc
+
+2. 18701 is the process number from trace file.
+
+SQL> oradebug setospid 18701
+ Oracle pid: 3, Unix process pid: 18701, image: oracle@test2.midumy.yamycom.com (DIAG)
+ SQL> oradebug close_trace;
+ Statement processed.
+
+ 
+
+Leave a Comment	
+
+
+Fixed SGA variables(latches) 
+
+Filed under: Oracle internals — sundar5 @ 8:32 pm 
+
+
+SQL> l
+ 1  SELECT  ksmfsnam, ksmfstyp, ksmfssiz, kslldnam, kslldlvl
+ 2   FROM x$ksmfsv k, x$kslld a
+ 3   WHERE k.ksmfstyp LIKE '%ksllt%' AND k.ksmfsadr = a.kslldadr
+ 4*  ORDER BY ksmfsnam
+ SQL> / 
+KSMFSNAM                 KSMFSTYP KSMFSSIZ KSLLDNAM                               KSLLDLVL
+ ------------------------ ----------------- ------------------------------------- ---------
+ consist_rba_lat_         ksllt         160 Consistent RBA                                6
+ hofcilt_                 ksllt         160 fixed table rows for x$hs_session             0
+ joxsgal_                 ksllt         160 JOX SGA heap latch                            0
+ jsaslat_                 ksllt         160 JS broadcast autostart latch                  2
+ jsbalat_                 ksllt         160 JS broadcast add buf latch                    2
+ jsbblat_                 ksllt         160 JS broadcast load blnc latch                  2
+ jsbdlat_                 ksllt         160 JS broadcast drop buf latch                   2
+ jsbelat_                 ksllt         160 JS event notify broadcast latch               2
+ jsbklat_                 ksllt         160 JS broadcast kill buf latch                   2
+ jskqlat_                 ksllt         160 JS queue state obj latch                      1
+ jslvlat_                 ksllt         160 JS slv state obj latch                        1
+ jsmlat_                  ksllt         160 JS mem alloc latch                            2
+ jsqlat_                  ksllt         160 JS queue access latch                         1
+ jssmlat_                 ksllt         160 JS Sh mem access                              1
+ k2gtehx_                 ksllt         160 global tx hash mapping                        1
+ kcb_table_scan_latch_    ksllt         160 cache table scan latch                        1
+ kcbcpl_                  ksllt         160 cache protection latch                        4
+ kcbhlx_                  ksllt         160 cache buffers chains                          1
+ kcbkacl_                 ksllt         160 active checkpoint queue latch                 5
+ kcbkclx_                 ksllt         160 checkpoint queue latch                        5
+ kcblsol_                 ksllt         160 loader state object freelist                  3
+ kcbmbl_                  ksllt         160 multiblock read objects                       3
+ kcbmfll_                 ksllt         160 state object free list                        0
+ kcbmpl_                  ksllt         160 sim partition latch                           6
+ kcbopal_                 ksllt         160 object queue header operation                 5
+ kcbophpl_                ksllt         160 object queue header heap                      4
+ kcbsol_                  ksllt         160 cache buffer handles                          3
+ kcbsphl_                 ksllt         160 simulator hash latch                          7
+ kcbspll_                 ksllt         160 simulator lru latch                           6
+ kcbsul_                  ksllt         160 multiple dbwriter suspend                     1
+ kcbvlsx_                 ksllt         160 mapped buffers lru chain                      8
+ kcbwbpx_                 ksllt         160 buffer pool                                   1
+ kcbwlsx_                 ksllt         160 cache buffers lru chain                       2
+ kcflsol_                 ksllt         160 OS file lock latch                            0
+ kcllt_                   ksllt         160 KCL gc element parent latch                   3
+ kcrfcp_                  ksllt         160 redo copy                                     4
+ kcrfral_                 ksllt         160 redo allocation                               5
+ kcrfrwl_                 ksllt         160 redo writing                                  1
+ kcrrall_                 ksllt         160 alert log latch                               6
+ kcrrgapl_                ksllt         160 SGA kcrrgap latch                             1
+ kcrrlatmscnl_            ksllt         160 SGA kcrrlatmscnl latch                        1
+ kcrrlt_                  ksllt         160 archive control                               4
+ kcrrml_                  ksllt         160 managed standby latch                         4
+ kcrrnslt_                ksllt         160 LGWR NS Write                                 6
+ kcrrpinfol_              ksllt         160 SGA kcrrpinfo latch                           1
+ kcrrpl_                  ksllt         160 archive process latch                         4
+ kcrrrtlt_                ksllt         160 Real time apply boundary                      6
+ kcrrssncpl_              ksllt         160 SGA kcrrssncpl latch                          1
+ kcslat_                  ksllt         160 mostly latch-free SCN                         6
+ kcvbbsl_                 ksllt         160 begin backup scn array                        1
+ kdltdsol_                ksllt         160 temp lob duration state obj allocation        3
+ kdnlch_                  ksllt         160 sequence cache                                8
+ kelrl_                   ksllt         160 threshold alerts latch                        3
+ kelrml_                  ksllt         160 alert memory latch                            4
+ keltl_                   ksllt         160 server alert latch                            3
+ kewetel_                 ksllt         160 generalized trace enabling latch              3
+ kewmalel_                ksllt         160 AWR Alerted Metric Element list               2
+ kewsaml_                 ksllt         160 statistics aggregation                        3
+ kfasgl_                  ksllt         160 KFA SGA latch                                 5
+ kfcFXhlx_                ksllt         160 KFC FX Hash Latch                             1
+ kfchlx_                  ksllt         160 KFC Hash Latch                                2
+ kfclbxfl_                ksllt         160 KFCL BX Freelist                              4
+ kfclflt_                 ksllt         160 KFCL LE Freelist                              4
+ kfclil_                  ksllt         160 KFCL Instance Latch                           5
+ kfclru_                  ksllt         160 KFC LRU latch                                 3
+ kfcsgl_                  ksllt         160 KFC SGA latch                                 2
+ kfcsol_                  ksllt         160 buffer pin latch                              3
+ kffill_                  ksllt         160 ASM file allocation latch                     2
+ kfflel_                  ksllt         160 ASM file locked extent latch                  2
+ kffmap_latch_            ksllt         160 ASM map headers                               2
+ kffmop_latch_            ksllt         160 ASM map operation hash table                  1
+ kffmop_load_latch_       ksllt         160 ASM map load waiting list                     3
+ kffmop_pool_latch_       ksllt         160 ASM map operation freelist                    2
+ kfksgl_                  ksllt         160 KFK SGA context latch                         1
+ kfltx_                   ksllt         160 ASM allocation                                3
+ kfmdlt_                  ksllt         160 KFMD SGA                                      5
+ kfmltx_                  ksllt         160 KFM allocation                                4
+ kfnbgl_                  ksllt         160 ASM network background latch                  2
+ kfncll_                  ksllt         160 ASM db client latch                           3
+ kfrcsol_                 ksllt         160 ASM rollback operations                       1
+ kfrral_                  ksllt         160 KFR redo allocation latch                     4
+ kghlat_                  ksllt         160 shared pool                                   7
+ kgklat_                  ksllt         160 Token Manager                                 6
+ kgkpclt_                 ksllt         160 resmgr:resource group CPU method             12
+ kgkpplt_                 ksllt         160 resmgr:plan CPU method                        7
+ kgkpsgl_                 ksllt         160 resmgr:method mem alloc latch                 6
+ kglhcl_                  ksllt         160 library cache hash chains                     9
+ kgllal_                  ksllt         160 library cache lock allocation                 3
+ kgllat_                  ksllt         160 library cache                                 5
+ kgllkl_                  ksllt         160 library cache lock                            6
+ kglllt_                  ksllt         160 library cache load lock                       5
+ kglpal_                  ksllt         160 library cache pin allocation                  3
+ kglpnl_                  ksllt         160 library cache pin                             6
+ kglsimalolat_            ksllt         160 shared pool sim alloc                         6
+ kglsimlat_               ksllt         160 shared pool simulator                         8
+ kgqbt_latch_             ksllt         160 Shared B-Tree                                 6
+ kgqm_latch_              ksllt         160 Memory Queue                                  5
+ kgqmk_latch_1_           ksllt         160 Memory Queue Message Subscriber #1            6
+ kgqmk_latch_2_           ksllt         160 Memory Queue Message Subscriber #2            6
+ kgqmk_latch_3_           ksllt         160 Memory Queue Message Subscriber #3            6
+ kgqmk_latch_4_           ksllt         160 Memory Queue Message Subscriber #4            6
+ kgqms_latch_             ksllt         160 Memory Queue Subscriber                       4
+ kgskactlat_              ksllt         160 resmgr:actses active list                     6
+ kgskcclat_               ksllt         160 resmgr:actses change group                   11
+ kgskcschlat_             ksllt         160 resmgr:schema config                          5
+ kgskcslat_               ksllt         160 resmgr:actses change state                   11
+ kgskfrtlat_              ksllt         160 resmgr:free threads list                      5
+ kgskgalat_               ksllt         160 resmgr:gang list                              8
+ kgskqthlat_              ksllt         160 resmgr:queued list                            8
+ kgskrtclat_              ksllt         160 resmgr:running actses count                   8
+ kgskrunlat_              ksllt         160 resmgr:runnable lists                         8
+ kgsksqlat_               ksllt         160 resmgr:session queuing                        7
+ kgskstatlat_             ksllt         160 resmgr:incr/decr stats                       11
+ kgskvcllat_              ksllt         160 resmgr:vc list latch                         12
+ kgsloca_                 ksllt         160 cas latch                                    11
+ kgslocarm_               ksllt         160 rm cas latch                                 13
+ kgxlat_                  ksllt         160 Mutex                                        11
+ kgxlatstat_              ksllt         160 Mutex Stats                                   0
+ kjbdmfl_                 ksllt         160 recovery domain freelist                      3
+ kjbdmhl_                 ksllt         160 recovery domain hash list                     8
+ kjblflt_                 ksllt         160 gcs shadows freelist                          5
+ kjbmclt_                 ksllt         160 gcs commit scn state                          8
+ kjbmdolt_                ksllt         160 gcs drop object freelist                      3
+ kjbrdvlt_                ksllt         160 gcs domain validate latch                     3
+ kjbrflt_                 ksllt         160 gcs resource freelist                         5
+ kjbrhsh_                 ksllt         160 gcs resource hash                             4
+ kjbril_                  ksllt         160 gcs opaque info freelist                      5
+ kjbrscn_                 ksllt         160 gcs resource scan list                        6
+ kjbrtbvlt_               ksllt         160 gcs resource validate list                    8
+ kjcevblt_                ksllt         160 KJC global post event buffer                  6
+ kjcsdfl_                 ksllt         160 KJC destination ctx free list                 2
+ kjcsmpl_                 ksllt         160 KJC message pool free list                    5
+ kjcsrfl_                 ksllt         160 KJC receiver ctx free list                    2
+ kjcsrmql_                ksllt         160 KJC global resend message queue               6
+ kjcsrql_                 ksllt         160 KJC receiver queue access list                2
+ kjcssfl_                 ksllt         160 KJC snd proxy ctx free list                   2
+ kjcssql_                 ksllt         160 KJC snd proxy queue access list               2
+ kjctfcl_                 ksllt         160 KJCT flow control latch                       6
+ kjctrql_                 ksllt         160 KJCT receiver queue access                    2
+ kjddtl_                  ksllt         160 ges deadlock list                             3
+ kjdmlt_                  ksllt         160 ges domain table                              3
+ kjdrpcmhvhl_             ksllt         160 gcs pcm hashed value bucket hash              6
+ kjdrpthl_                ksllt         160 gcs partitioned table hash                    6
+ kjdrrml_                 ksllt         160 gcs remastering latch                         5
+ kjdrrql_                 ksllt         160 gcs remaster request queue                    1
+ kjfsyncl_                ksllt         160 ges synchronous data                          3
+ kjgltb_                  ksllt         160 ges group table                               5
+ kjltfl_                  ksllt         160 ges enqueue table freelist                    5
+ kjphsh_                  ksllt         160 ges process hash list                         2
+ kjplat_                  ksllt         160 ges process parent latch                      2
+ kjptfl_                  ksllt         160 ges process table freelist                    4
+ kjrcah_                  ksllt         160 ges caches resource lists                     2
+ kjrhsh_                  ksllt         160 ges resource hash list                        1
+ kjrscn_                  ksllt         160 ges resource scan list                        3
+ kjrsll_                  ksllt         160 ges s-lock bitvec freelist                    6
+ kjrtfl_                  ksllt         160 ges resource table freelist                   3
+ kjstatl_                 ksllt         160 ges statistic table                           1
+ kjtmll_                  ksllt         160 ges timeout list                              3
+ kjxgnsl_                 ksllt         160 name-service entry                            3
+ kjxgsnb_                 ksllt         160 name-service namespace bucket                 4
+ kjxgsnl_                 ksllt         160 name-service namespace objects                5
+ kjxgsnm_                 ksllt         160 name-service memory objects                   5
+ kjxgspl_                 ksllt         160 name-service pending queue                    3
+ kjxgsrl_                 ksllt         160 name-service request queue                    2
+ kjxgssl_                 ksllt         160 name-service request                          2
+ kjzddmpq_                ksllt         160 queued dump request                           8
+ kjzhghal_                ksllt         160 global hanganlyze operation                   0
+ kkdllat_                 ksllt         160 dictionary lookup                             4
+ kkjfllat_                ksllt         160 job_queue_processes free list latch           2
+ kkjlat_                  ksllt         160 job_queue_processes parameter latch           0
+ kkjwqpl_                 ksllt         160 job workq parent latch                        1
+ kksstlat_                ksllt         160 kks stats                                     0
+ klcslt_                  ksllt         160 NLS data objects                              2
+ kmcalc_                  ksllt         160 virtual circuits                              3
+ kmcblt_                  ksllt         160 virtual circuit buffers                       2
+ kmcptlat_                ksllt         160 kmcptab latch                                 6
+ kmcpvlat_                ksllt         160 kmcpvec latch                                 6
+ kmcqlt_                  ksllt         160 virtual circuit queues                        3
+ kmgs_param_latch_        ksllt         160 Memory Management Parameter Latch             1
+ kmgs_startup_            ksllt         160 KMG MMAN ready and startup request latch      7
+ kmgslt_                  ksllt         160 Memory Management Latch                       7
+ kmgsrqsol_               ksllt         160 KMG resize request state object freelist      7
+ kmmadl_                  ksllt         160 address list                                  6
+ kmmcfgl_                 ksllt         160 shared server configuration                   6
+ kmmdisl_                 ksllt         160 dispatcher info                               6
+ kmmepl_                  ksllt         160 end-point list                                6
+ kmmltsp1_                ksllt         160 shared server spare latch 1                   8
+ kmmltsp2_                ksllt         160 shared server spare latch 2                   5
+ kmmltsp3_                ksllt         160 shared server spare latch 3                   1
+ kmmpml_                  ksllt         160 parameter list                                6
+ kmmprl_                  ksllt         160 presentation list                             6
+ kmmsisl_                 ksllt         160 shared server info                            6
+ kmmtml_                  ksllt         160 session timer                                 2
+ kngla_                   ksllt         160 Streams Generic                               1
+ knla_latch_              ksllt         160 STREAMS Pool Advisor                          0
+ knlapl_                  ksllt         160 TXN SGA                                       0
+ knlpl_                   ksllt         160 process                                       0
+ knlqlcrl_                ksllt         160 STREAMS LCR                                   0
+ kponchlat_               ksllt         160 KPON ksr channel latch                        4
+ kponlat_                 ksllt         160 numer of job queues for server notfn          4
+ kponsplt_                ksllt         160 kpon sga structure                            4
+ kponstlat_               ksllt         160 reg$ timeout service time                     4
+ kpslat_                  ksllt         160 session state list latch                      3
+ kqrplt_                  ksllt         160 row cache objects                             4
+ krarsl_                  ksllt         160 Reserved Space Latch                          8
+ krarsol_                 ksllt         160 reservation so alloc latch                    0
+ krbmrosl_                ksllt         160 krbmrosl                                      0
+ krbtdblat_               ksllt         160 Transportable DB Context Latch                5
+ krccscl_                 ksllt         160 change tracking consistent SCN                8
+ krcoscl_                 ksllt         160 change tracking optimization SCN              8
+ krcpsol_                 ksllt         160 change tracking state change latch            0
+ krdbsol_                 ksllt         160 block media rcv so alloc latch                0
+ krdlpv_                  ksllt         160 parallel recoverable recovery                 8
+ krdnpl_                  ksllt         160 media recovery process out of buffers         8
+ krdsal_                  ksllt         160 Media rcv so alloc latch                      5
+ krfgal_                  ksllt         160 flashback allocation                          6
+ krfgcp_                  ksllt         160 flashback copy                                5
+ krfgfbl_                 ksllt         160 flashback FBA barrier                         6
+ krfghfbl_                ksllt         160 hint flashback FBA barrier                    6
+ krfghsbl_                ksllt         160 flashback hint SCN barrier                    6
+ krfgml_                  ksllt         160 flashback mapping                             6
+ krfgsbl_                 ksllt         160 flashback SCN barrier                         6
+ krfgsl_                  ksllt         160 flashback sync request                        6
+ krsffhl_                 ksllt         160 FAL subheap alocation                         4
+ krsffql_                 ksllt         160 FAL request queue                             5
+ krsmrsl_                 ksllt         160 Managed Standby Recovery State                5
+ krtlch_                  ksllt         160 file number translation table                 7
+ krvLmctx_                ksllt         160 logminer context allocation                   0
+ krvLsctx_                ksllt         160 logminer work area                            5
+ krvscl_                  ksllt         160 logical standby cache                         5
+ krvsvl_                  ksllt         160 logical standby view                          0
+ ksamsl_                  ksllt         160 messages                                      8
+ ksdgpl_                  ksllt         160 event group latch                             0
+ ksdlaa_                  ksllt         160 Testing                                       2
+ ksfdfibl_                ksllt         160 FIB s.o chain latch                           6
+ ksfdfobl_                ksllt         160 FOB s.o list latch                            6
+ ksfdsbl_                 ksllt         160 SGA IO buffer pool latch                      6
+ ksfmlt_                  ksllt         160 SGA mapping latch                             8
+ ksfqlt_                  ksllt         160 KSFQ                                          6
+ ksfqpl_                  ksllt         160 X$KSFQP                                       6
+ ksfvbdl_                 ksllt         160 vecio buf des                                 2
+ ksfvdql_                 ksllt         160 done queue latch                              3
+ ksfvmpl_                 ksllt         160 ksfv messages                                 0
+ ksfvmql_                 ksllt         160 msg queue latch                               2
+ ksfvsgl_                 ksllt         160 i/o slave adaptor                             2
+ ksfvshl_                 ksllt         160 ksfv subheap                                  2
+ ksfvsml_                 ksllt         160 direct msg latch                              1
+ ksfvsql_                 ksllt         160 session queue latch                           1
+ ksimcal_                 ksllt         160 cached attr list                              0
+ ksirlt_                  ksllt         160 ksir sga latch                                5
+ kskclchg_                ksllt         160 resmgr group change latch                     0
+ kslerl_                  ksllt         160 event range base latch                        8
+ kslhotlst_               ksllt         160 hot latch diags                               0
+ kslpwl_                  ksllt         160 post/wait queue                               8
+ ksmdla_                  ksllt         160 segmented array pool                          5
+ ksmgol_                  ksllt         160 granule operation                             8
+ ksolshtl_                ksllt         160 object stats modification                     5
+ ksoreq_alloc_latch_      ksllt         160 OS process: request allocation                6
+ ksosp_alloc_latch_       ksllt         160 OS process allocation                         4
+ ksosp_latch_             ksllt         160 OS process                                    5
+ ksparl1_                 ksllt         160 first spare latch                             0
+ ksparl2_                 ksllt         160 second spare latch                            0
+ kspdsl_                  ksllt         160 database property service latch               3
+ kspptbll_                ksllt         160 parameter table allocation management         6
+ ksqeqi_                  ksllt         160 instance enqueue                              0
+ ksqeql_                  ksllt         160 enqueues                                      5
+ ksqeqr_                  ksllt         160 enqueue hash chains                           4
+ ksr_dynch_latch_         ksllt         160 dynamic channels                              4
+ ksrccol_                 ksllt         160 channel operations parent latch               5
+ ksrchal_                 ksllt         160 channel anchor                                5
+ ksrcsgl_                 ksllt         160 channel handle pool latch                     5
+ ksrmpol_                 ksllt         160 message pool operations parent latch          6
+ kstlt_                   ksllt         160 trace latch                                   4
+ ksucil_                  ksllt         160 client/application info                       7
+ ksulopl_                 ksllt         160 longop free list parent                       8
+ ksuosstatl_              ksllt         160 ksuosstats global area                        8
+ ksupal_                  ksllt         160 process allocation                            1
+ ksupgpl_                 ksllt         160 process group creation                        0
+ ksupkttestl_             ksllt         160 ksupkttest latch                              8
+ ksupol_                  ksllt         160 session idle bit                              1
+ ksusal_                  ksllt         160 session switching                             0
+ ksusol_                  ksllt         160 session allocation                            5
+ ksvclsl_                 ksllt         160 slave class                                   2
+ ksvcrel_                 ksllt         160 slave class create                            0
+ ksvinst_                 ksllt         160 ksv instance                                  0
+ ksvmql_                  ksllt         160 msg queue                                     1
+ kswsasl_                 ksllt         160 active service list                           0
+ ksxadvi_                 ksllt         160 device information                            5
+ ksxhtl_                  ksllt         160 hash table modification latch                 1
+ ksxmcul_                 ksllt         160 hash table column usage latch                 1
+ ksxptal_                 ksllt         160 ksxp tid allocation                           8
+ ksxrlrl_                 ksllt         160 KSXR large replies                            8
+ ktasol_                  ksllt         160 dml lock allocation                           3
+ ktcbol_                  ksllt         160 transaction branch allocation                 6
+ ktccol_                  ksllt         160 commit callback allocation                    6
+ ktcdol_                  ksllt         160 dummy allocation                              6
+ ktcnlat_                 ksllt         160 Change Notification Hash table latch          0
+ ktcnslat_                ksllt         160 Change Notification Latch                     5
+ ktcsol_                  ksllt         160 transaction allocation                        6
+ ktfsgalt_                ksllt         160 KTF sga latch                                 6
+ ktilat_                  ksllt         160 In memory undo latch                          0
+ ktlbkl_                  ksllt         160 list of block allocation                      3
+ ktmlat_                  ksllt         160 ktm global data                               5
+ ktprilt_                 ksllt         160 intra txn parallel recovery                   5
+ ktprlt_                  ksllt         160 parallel txn reco latch                       5
+ ktrsol_                  ksllt         160 resumable state object                        4
+ ktskslt_                 ksllt         160 shrink stat allocation latch                  0
+ ktsmg_mql_lat_           ksllt         160 MQL Tracking Latch                            0
+ ktstlt_                  ksllt         160 sort extent pool                              3
+ ktteflt_                 ksllt         160 file cache latch                              0
+ ktulat_                  ksllt         160 undo global data                              5
+ ktusm_uhnt_lat_          ksllt         160 Undo Hint Latch                               0
+ kupplat_                 ksllt         160 kupp process latch                            3
+ kuppwel_                 ksllt         160 pass worker exception to master               6
+ kupvatla_                ksllt         160 datapump attach fixed tables latch            0
+ kupvjbla_                ksllt         160 datapump job fixed tables latch               0
+ kwqbblt_                 ksllt         160 kwqbsgn:msghdr                                6
+ kwqbccl_                 ksllt         160 kwqbcco:cco                                   0
+ kwqbqsi_                 ksllt         160 queue sender's info. latch                    2
+ kwqbqsl_                 ksllt         160 kwqbsn:qsga                                   0
+ kwqbqtl_                 ksllt         160 bq:time manger info latch                     1
+ kwqbqxl_                 ksllt         160 kwqbsn:qxl                                    6
+ kwqbslt_                 ksllt         160 enqueue sob latch                             0
+ kwqbsplt_                ksllt         160 spilled messages latch                        6
+ kwqbstl_                 ksllt         160 bufq statistics                               1
+ kwqiihl_                 ksllt         160 image handles of buffered messages latch      6
+ kwqikcl_                 ksllt         160 kwqi:kchunk latch                             0
+ kwqimslt_                ksllt         160 message enqueue sync latch                    4
+ kwqjphl_                 ksllt         160 AQ Propagation Scheduling Proc Table          8
+ kwqjpslt_                ksllt         160 job queue sob latch                           0
+ kwqjtwl_                 ksllt         160 AQ Propagation Scheduling System Load         8
+ kwqmnjcl_                ksllt         160 KWQMN job cache list latch                    1
+ kwqmnsbl_                ksllt         160 KWQMN to-be-Stopped Buffer list Latch         2
+ kwqmnslt_                ksllt         160 qmn state object latch                        0
+ kwqmntl_                 ksllt         160 qmn task queue latch                          1
+ kwqpls_                  ksllt         160 KWQP Prop Status                              5
+ kwrsala_                 ksllt         160 rules engine aggregate statistics             4
+ kwrsela_                 ksllt         160 rules engine evaluation context statistics    5
+ kwrsrla_                 ksllt         160 rules engine rule statistics                  5
+ kwrssla_                 ksllt         160 rules engine rule set statistics              4
+ kxcwsol_                 ksllt         160 constraint object allocation                  6
+ kxfpbl_                  ksllt         160 parallel query alloc buffer                   6
+ kxfpel_                  ksllt         160 error message lists                           5
+ kxfpfl_                  ksllt         160 query server freelists                        6
+ kxfppl_                  ksllt         160 query server process                          2
+ kxfpqcbcl_               ksllt         160 business card                                 4
+ kxfpql_                  ksllt         160 process queue                                 5
+ kxfprl_                  ksllt         160 process queue reference                       4
+ kxfpsl_                  ksllt         160 parallel query stats                          8
+ kxttsol_                 ksllt         160 temporary table state object allocation       6
+ kzctxglat_               ksllt         160 global ctx hash table latch                   5
+ kzldglat_                ksllt         160 global KZLD latch for mem in SGA              0
+ kzrcol_                  ksllt         160 cost function                                 8
+ kzrtlprv_                ksllt         160 Policy Refresh Latch                          5
+ kzrtphlat_               ksllt         160 Policy Hash Table Latch                       5
+ kzullt_                  ksllt         160 user lock                                     3
+ lwn_scn_lat_             ksllt         160 lgwr LWN SCN                                  7
+ ncodfl_                  ksllt         160 ncodef allocation latch                       8
+ on_disk_ping_scn_lat_    ksllt         160 ping redo on-disk SCN                         8
+ on_disk_scn_lat_         ksllt         160 redo on-disk SCN                              8
+ pebof_rrv_lat_           ksllt         160 pebof_rrv                                     0
+ peplmlat_                ksllt         160 peplm                                         0
+ plswlch_                 ksllt         160 PL/SQL warning settings                       0
+ qesblActLatch_           ksllt         160 Bloom filter list latch                       1
+ qesblSGAlatch_           ksllt         160 Bloom Filter SGA latch                        6
+ qesmmILstLatch_          ksllt         160 SQL memory manager workarea list latch        2
+ qesmmISgaLatch_          ksllt         160 SQL memory manager latch                      1
+ qks3tlth_                ksllt         160 internal temp table object number allocation  8
+ qksbgActLatch_           ksllt         160 bug fix control action latch                  1
+ qksceSgaLatch_           ksllt         160 compile environment latch                     2
+ qmkml_                   ksllt         160 XDB Config                                    0
+ qmpspl_                  ksllt         160 XDB unused session pool                       0
+ qmpsupl_                 ksllt         160 XDB used session pool                         0
+ qmsgl_                   ksllt         160 qm_init_sga                                   0
+ qmtlat_                  ksllt         160 QMT                                           0
+ qolnaml_                 ksllt         160 QOL Name Generation Latch                     0
+ rfafol_                  ksllt         160 Fast-Start Failover State Latch               0
+ rfmctxl_                 ksllt         160 DMON Process Context Latch                    7
+ rfmtql_                  ksllt         160 DMON Work Queues Latch                        7
+ rfrarql_                 ksllt         160 Request id generation latch                   5
+ rfrmpl_                  ksllt         160 RSM process latch                             0
+ rfrmsq_                  ksllt         160 RSM SQL latch                                 0
+ xsawSGAlatch_            ksllt         160 AW SGA latch                                  6
+ xscalcflt_               ksllt         160 xscalc freelist                               6
+ xssinfoflt_              ksllt         160 xssinfo freelist                              6
+ zlgifl_                  ksllt         160 instance information                          3
+ zllbcl_                  ksllt         160 OLS label cache                               3
+ zlpifl_                  ksllt         160 policy information                            3
+ 
+388 rows selected.
+
+Leave a Comment	
+
+January 28, 2010
+
+
+Controle file 
+
+Filed under: Inside Controle file — sundar5 @ 4:55 pm 
+
+
+
+Oracle maintains the record of the physical structure and on-going database changes
+ in the control file. These records are consistency with data/logs files header
+ information in the database.
+
+To make consistence between database and control file, oracle uses the unique
+ number called SCN number. This SCN number is generated by oracle using
+ checkpoint method.
+
+Oracle generates various kinds of SCN numbers in the database operations.
+
+• Full Checkpoint
+• Thread Checkpoint
+• File Checkpoint
+• Object   Checkpoint
+• Parallel Query Checkpoint
+• Incremental Checkpoint
+• Log Switch Checkpoint
+
+Full Checkpoint
+
+Oracle writs all the dirty block image of cache buffers in to the data files for
+ all instances. The following actions are caused by full check points.
+
+• Shutdown immediate
+• Alter database close
+• Alter system checkpoint [global]
+• Alter database begin backup
+
+Statistics update:
+
+• DBWR threads checkpoint buffers written
+• DBWR checkpoints
+• DBWR checkpoint buffers written
+
+Thread Checkpoint:
+
+Writs all the dirty block images of cache buffers in to the data files for
+ single instance.
+
+• Alter system checkpoint local
+
+File Checkpoint
+
+All the dirty block images are written to the data file for a tablespace
+
+• Alter tablespace TEST begin backup
+• Alter tablespace TEST offline
+• Alter tablespace TEST read only
+
+Parallel Query Checkpoint
+
+All the dirty block images of the objects are written to the data files
+ from all instances.
+
+• Parallel Query
+• Mandatory for consistency
+• Parallel Query component.(PDML/PDDL)
+
+Object Checkpoint
+
+All the dirty block images of the object are written tot the data files
+ from all the instance.
+
+• Drop table sales
+• Drop table sales purge
+• Truncate table sales
+• Drop index sales_idx
+
+Log Switch Checkpoint
+
+All the or some of the dirty buffers are written in the data files and
+ Control file is updated.
+
+• Control file and data file headers are updated
+
+Incremental Checkpoint
+
+From CKPT-Q queue dirty buffers are written to the data files base on
+ the fast_start_mttr_target parameter  to keep-up with instance
+ recovery minimum.
+
+• Block images written in SCN order
+
+• Checkpoint RBA updated in SGA
+
+
+
+Controlfile contains non-reusable records
+
+• Database
+• Tablespace
+• Datafile
+• Online redo log …
+
+Circular reuse records
+
+• Archived log
+• Backup set and piece
+• Backup datafile and datafile copy …
+
+34 different record types in 10g R2
+
+Session must obtain CF enqueue first
+
+Controlfile contains 2 versions of each block
+
+• bitmap indicates which version is current
+
+• transaction modifies non-current version
+
+At the end of transaction
+
+•  controlfile sequence number is incremented
+
+• bitmap is updated and written out atomically
+
+• CF enqueue is released
+
+1.  What the size of control file block size?
+
+default  always database block size (db_block_size parameter)
+
+
+
+FILE HEADER:
+
+Compatibility Vsn = 168821248=0xa100200
+ Db ID=3364774739=0xc88e6353, Db Name=’TEST‘
+Activation ID=0=0x0
+ Control Seq=925546=0xe1f6a, File size=282=0x11a
+ File Number=0, Blksiz=16384, File Type=1 CONTROL
+
+db ID      = 3364774739 (Database id)
+ db name    = TEST (Database name)
+ File size  = 282 blocks (282*16384=4620288 + 16384(Blksiz) =4636672)
+ blksize    = 16384
+ file Number= 0
+ file type  = control file
+
+DATABASE ENTRY
+
+(extent = 1, blkno = 1, numrecs = 1)
+ 03/21/2007 00:09:01
+ DB Name “TEST”
+Database flags = 0x10404000 0x00001000
+ Controlfile Creation Timestamp  03/21/2007 00:09:02
+ Incmplt recovery scn: 0x0000.00000000
+ Resetlogs scn: 0x0000.00000001 Resetlogs Timestamp  03/21/2007 00:09:01
+ Prior resetlogs scn: 0x0000.00000000 Prior resetlogs Timestamp  01/01/1988 00:00:00
+ Redo Version: compatible=0xa200000
+ #Data files = 5, #Online files = 5
+ Database checkpoint: Thread=1 scn: 0x0000.0002a28b
+ Threads: #Enabled=2, #Open=2, Head=1, Tail=2
+ enabled  threads:  01100000 00000000 00000000 00000000 00000000 00000000
+
+DATA FILE RECORDS
+ (size = 428, compat size = 428, section max = 2000, section in-use = 5,
+ last-recid= 7, old-recno = 0, last-recno = 0)
+ (extent = 1, blkno = 15, numrecs = 2000)
+ DATA FILE #1:
+ (name #7) /u22/oradata/TEST/TESTsystem_01.dbf
+ creation size=64000 block size=8192 status=0xe head=7 tail=7 dup=1
+ tablespace 0, index=1 krfil=1 prev_file=0
+ unrecoverable scn: 0x0000.00000000 01/01/1988 00:00:00
+ Checkpoint cnt:20 scn: 0x0000.0002a28b 03/21/2007 02:16:59
+ Stop scn: 0xffff.ffffffff 03/21/2007 00:29:35
+ Creation Checkpointed at scn:  0x0000.00000006 03/21/2007 00:09:13
+ thread:1 rba:(0x1.3.10)
+
+LOG FILE RECORDS
+
+(size = 72, compat size = 72, section max = 32, section in-use = 6,
+
+last-recid= 6, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 14, numrecs = 32)
+
+LOG FILE #1:
+
+(name #1) /u02/origlog/TEST/TESTlog_t1_g1_m1.dbf
+
+(name #2) /u03/mirrlog/TEST/TESTlog_t1_g1_m2.dbf
+
+Thread 1 redo log links: forward: 2 backward: 0
+
+siz: 0x4b000 seq: 0x0000000a hws: 0x1 bsz: 1024 nab: 0xffffffff flg: 0x8 dup: 2
+
+Archive links: fwrd: 0 back: 0 Prev scn: 0x0000.00029e02
+
+Low scn: 0x0000.0002a28b 03/21/2007 02:16:59
+
+Next scn: 0xffff.ffffffff 01/01/1988 00:00:00
+
+RMAN CONFIGURATION RECORDS
+
+(size = 1108, compat size = 1108, section max = 50, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 283, numrecs = 50)
+
+CHANNEL:DEVICE TYPE ‘SBT_TAPE’ PARMS  ‘SBT_LIBRARY=/opt/omni/lib/
+
+libob2oracle8_64bit.so’ recno=1
+
+DEFAULT DEVICE TYPE TO:’SBT_TAPE’ recno=2
+
+CONTROLFILE AUTOBACKUP:ON recno=3
+
+CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE:’SBT_TAPE’ TO ‘control_file_%F’ recno=4
+
+BACKUP OPTIMIZATION:ON recno=5
+
+RETENTION POLICY:TO RECOVERY WINDOW OF 45 DAYS recno=6
+
+(extent = 1, blkno = 304, numrecs = 1008)
+
+BACKUP SET RECORDS
+
+(size = 40, compat size = 40, section max = 1227, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 340, numrecs = 1227)
+
+BACKUP PIECE RECORDS
+
+(size = 736, compat size = 736, section max = 1000, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 343, numrecs = 1000)
+
+BACKUP DATAFILE RECORDS
+
+(size = 116, compat size = 116, section max = 1128, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 388, numrecs = 1128)
+
+BACKUP LOG RECORDS
+
+(size = 76, compat size = 76, section max = 215, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 396, numrecs = 215)
+
+DATAFILE COPY RECORDS
+
+(size = 660, compat size = 660, section max = 1016, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 397, numrecs = 1016)
+
+BACKUP DATAFILE CORRUPTION RECORDS
+
+(size = 44, compat size = 44, section max = 1115, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 438, numrecs = 1115)
+
+DATAFILE COPY CORRUPTION RECORDS
+
+(size = 40, compat size = 40, section max = 1227, section in-use = 0,
+
+last-recid= 0, old-recno = 0, last-recno = 0)
+
+(extent = 1, blkno = 441, numrecs = 1227)
+
+DELETION RECORDS
+
+select * from v$controlfile_record_section
+
+TYPE                         RECORD_SIZE RECORDS_TOTAL RECORDS_USED FIRST_INDEX LAST_INDEX LAST_RECID
+
+—————————- ———– ————- ———— ———– ———- ———-
+
+DATABASE                             316             1            1           0          0          0
+
+CKPT PROGRESS                       8180            19            0           0          0          0
+
+REDO THREAD                          256            16            2           0          0          2
+
+REDO LOG                              72            32            6           0          0          6
+
+DATAFILE                             428          2000            5           0          0          7
+
+FILENAME                             524          6210           18           0          0          0
+
+TABLESPACE                            68          2000            6           0          0          8
+
+TEMPORARY FILENAME                    56          2000            1           0          0          1
+
+RMAN CONFIGURATION                  1108            50            0           0          0          0
+
+LOG HISTORY                           56          1168           34           1         34         34
+
+OFFLINE RANGE                        200          1063            0           0          0          0
+
+ARCHIVED LOG                         584          1008            0           0          0          0
+
+BACKUP SET                            40          1227            0           0          0          0
+
+BACKUP PIECE                         736          1000            0           0          0          0
+
+BACKUP DATAFILE                      116          1128            0           0          0          0
+
+BACKUP REDOLOG                        76           215            0           0          0          0
+
+DATAFILE COPY                        660          1016            0           0          0          0
+
+BACKUP CORRUPTION                     44          1115            0           0          0          0
+
+COPY CORRUPTION                       40          1227            0           0          0          0
+
+DELETED OBJECT                        20          1636            0           0          0          0
+
+PROXY COPY                           852          1017            0           0          0          0
+
+BACKUP SPFILE                         36           454            0           0          0          0
+
+DATABASE INCARNATION                  56           292            1           1          1          1
+
+FLASHBACK LOG                         84          2048            0           0          0          0
+
+RECOVERY DESTINATION                 180             1            1           0          0          0
+
+INSTANCE SPACE RESERVATION            28          1055            1           0          0          0
+
+REMOVABLE RECOVERY FILES              32          1000            0           0          0          0
+
+RMAN STATUS                          116           141            0           0          0          0
+
+THREAD INSTANCE NAME MAPPING          80            16           16           0          0          0
+
+MTTR                                 100            16            2           0          0          0
+
+DATAFILE HISTORY                     568            57            0           0          0          0
+
+STANDBY DATABASE MATRIX              400            10           10           0          0          0
+
+GUARANTEED RESTORE POINT             212          2048            0           0          0          0
+
+RESTORE POINT                        212          2083            0           0          0          0
+
+34 rows selected
+
+DATABASE VIEWS
+
+V$BUFFERED_QUEUES
+
+V$BUFFERED_PUBLISHERS
+
+V$BSP
+
+V$BLOCK_CHANGE_TRACKING
+
+V$BACKUP_SPFILE_SUMMARY
+
+V$BACKUP_SPFILE_DETAILS
+
+V$BACKUP_SPFILE
+
+V$BACKUP_SET_SUMMARY
+
+V$BACKUP_SET_DETAILS
+
+V$BACKUP_SET
+
+V$BACKUP_REDOLOG
+
+V$BACKUP_PIECE_DETAILS
+
+V$BACKUP_PIECE
+
+V$BACKUP_FILES
+
+V$BACKUP_DEVICE
+
+V$BACKUP_DATAFILE_SUMMARY
+
+V$BACKUP_DATAFILE_DETAILS
+
+V$BACKUP_DATAFILE
+
+V$BACKUP_CORRUPTION
+
+V$BACKUP_COPY_SUMMARY
+
+V$BACKUP_COPY_DETAILS
+
+V$BACKUP_CONTROLFILE_SUMMARY
+
+V$BACKUP_CONTROLFILE_DETAILS
+
+V$BACKUP_ASYNC_IO
+
+V$BACKUP_ARCHIVELOG_SUMMARY
+
+V$BACKUP_ARCHIVELOG_DETAILS
+
+CATALOG VIEWS
+
+RC_DATABASE                    VIEW
+
+RC_DATABASE_INCARNATION        VIEW
+
+RC_RESYNC                      VIEW
+
+RC_CHECKPOINT                  VIEW
+
+RC_TABLESPACE                  VIEW
+
+RC_DATAFILE                    VIEW
+
+RC_TEMPFILE                    VIEW
+
+RC_REDO_THREAD                 VIEW
+
+RC_REDO_LOG                    VIEW
+
+RC_LOG_HISTORY                 VIEW
+
+RC_ARCHIVED_LOG                VIEW
+
+RC_BACKUP_SET                  VIEW
+
+RC_BACKUP_PIECE                VIEW
+
+RC_BACKUP_DATAFILE             VIEW
+
+RC_BACKUP_CONTROLFILE          VIEW
+
+RC_BACKUP_SPFILE               VIEW
+
+RC_DATAFILE_COPY               VIEW
+
+RC_CONTROLFILE_COPY            VIEW
+
+RC_BACKUP_REDOLOG              VIEW
+
+RC_BACKUP_CORRUPTION           VIEW
+
+RC_COPY_CORRUPTION             VIEW
+
+RC_OFFLINE_RANGE               VIEW
+
+RC_STORED_SCRIPT               VIEW
+
+RC_STORED_SCRIPT_LINE          VIEW
+
+RC_PROXY_DATAFILE              VIEW
+
+RC_PROXY_CONTROLFILE           VIEW
+
+RC_RMAN_CONFIGURATION          VIEW
+
+RC_DATABASE_BLOCK_CORRUPTION
+
+Leave a Comment	
+
+January 23, 2010
+
+
+Oracle Block 
+
+Filed under: Oracle internals — sundar5 @ 7:19 pm 
+
+
+
+ 
+
+
+CREATE TABLE test 
+
+(col1 NUMBER, col2 VARCHAR2(200)) storage (freelists 4);
+
+Start dump data blocks tsn: 4 file#: 5 minblk 18 maxblk 18
+ buffer tsn: 4 rdba: 0x01400012 (5/18)
+ scn: 0x0000.000c786e seq: 0x02 flg: 0x00 tail: 0x786e1002
+ frmt: 0x02 chkval: 0x0000 type: 0x10=DATA SEGMENT HEADER – UNLIMITED
+ Extent Control Header
+—————————————————————–
+Extent Header:: spare1: 0 space2: 0 #extents: 1 #blocks: 15
+ last map 0x00000000 #maps: 0 offset: 4128
+ Highwater:: 0x01400013 ext#: 0 blk#: 0 ext size: 15
+ #blocks in seg. hdr’s freelists: 0
+ #blocks below: 0
+ mapblk 0x00000000 offset: 0
+ Unlocked
+ Map Header:: next 0x00000000 #extents: 1 obj#: 27042 flag: 0x40000000
+ Extent Map
+—————————————————————–
+0x01400013 length: 15
+nfl = 4, nfb = 1 typ = 1 nxf = 0
+ SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
+ SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
+ SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
+ SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
+ SEG LST:: flg: UNUSED lhd: 0x00000000 ltl: 0x00000000
+ End dump data blocks tsn: 4 file#: 5 minblk 18 maxblk
+
+Leave a Comment	
+
+January 21, 2010
+
+
+File system 
+
+Filed under: Oracle internals — sundar5 @ 11:47 pm 
+
+
+
+FILE SYSTEM:
+
+Raw    Raw devices, no filesystem
+ ASM    Automatic Storage Management
+ CFS    Cluster File System
+ OCFS    Oracle Cluster File System
+ LVM    Logical Volume Manager
+ NFS    Network File System
+ ACFS    ASM Cluster Filesystem (ORACLE 11.2)
+
+Leave a Comment	
+
+
+Oracle Layer 
+
+Filed under: Oracle internals — sundar5 @ 11:11 pm 
+
+
+
+Kernel Subsystems:
+
+OCI   Oracle Call  Interface
+ UPI   User Program Interface
+
+Net interconnection
+
+OPI   Oracle Program Interface
+ KK    Compilation Layer
+ KX    Execution Layer
+ K2    Distributed Execution Layer
+ NPI   Network Program Interface
+ KZ    Security Layer – Validate privs
+ KQ    Query Layer
+ RPI   Recursive Program Interface
+ KA    Access Layer
+ KD    Data Layer
+ KT    Transaction Layer
+ KC    Cache Layer
+ KS    Services Layer
+ KJ    Lock Manager Layer
+ KG    Generic Layer
+ KV    Kernel Variables
+ S     Operating System Dependency (ODS)
+
+Leave a Comment	
+
+
+GNS (Oracle 11R2) 
+
+Filed under: Oracle 11R2,Oracle internals — sundar5 @ 10:40 pm 
+Tags: GNS (ORACLE 11R2)
+
+
+
+1. One of the new features of 11gR2 is Grid Plug and Play, also called GPnP.
+
+2. Oracle Clusterware enables a dynamic grid infrastructure through the self-management of the
+ network requirements for the cluster.
+
+3. The key enablers for GPnP are GNS and DHCP. All of the requirements for a Grid Infrastructure
+ installation
+
+4. To implement GNS, you must collaborate with network administrator to obtain an IP address on
+ the public network for the GNS VIP.
+
+In DNS:
+
+cluster.corp.abc.com NS gns.cluster.corp.abc.com
+ gns.cluster.corp.abc.com. 10.161.102.10
+
+5. DNS uses the GNS VIP to forward requests to the cluster to GNS.
+
+6. The network administrator must delegate a subdomain in the network to the cluster.
+ The subdomain forwards all requests for addresses in the subdomain to the GNS VIP.
+
+7. GNS and the GNS VIP run on one node in the cluster. The GNS daemon listens, using default port 53,
+ on this address for incoming requests
+
+8. If the server on which GNS is running fails, then Oracle Clusterware fails GNS over, along with
+ the GNS VIP, to another node in the cluster.
+
+9. while grid installation option Grid plus and play inmformation. please enter following information.
+
+Configure GNS
+
+GNS Sub-Domain: cluster.corp.abc.com
+ GNS vIP address: 10.161.102.10
+
+Note : cluster name is cluster
+ SCAN name : scan.cluster.corp.abc.com
+ SCANport : 1521
+
+Leave a Comment	
+
+January 20, 2010
+
+
+Oracle 11g R2 
+
+Filed under: Oracle 11R2,Oracle internals — sundar5 @ 4:52 am 
+Tags: Oracle11r2
+
+
+
+1. SCANs run on the cluster, not on a cluster node. SCANs provide location independence for the databases, so that client configuration does not have to depend on which nodes are running a particular database.
+
+There are 2 options for defining the SCAN
+
+1. SCAN IP entries (3 IP recommended) in the DNS server (Domain Name Service).
+
+2. IP address was created by using DHCP server while installing Grid Naming Service (GNS)option.
+
+Option 1:
+
+We need network admin to define IP addresses (3) in the corporate DNS server with same alias name.
+
+market-scan.example.com       IN A 191.21.37.151
+
+IN A 191.21.37.152
+
+IN A 191.21.37.153
+
+Example:
+
+SCAN tnsnames.ora
+
+MKTCLUTER =
+
+(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP) (HOST = market-scan.example.com)) PORT=1521))
+
+(CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = media)))
+
+Old way tnsnames.ora
+
+MKTCLUTER=(DESCRIPTION=
+
+(ADDRESS =(PROTOCOL = TCP)(HOST = market1-vip.example.com))(PORT = 1521))
+
+(ADDRESS =(PROTOCOL = TCP)(HOST = market2-vip.example.com))(PORT = 1521))
+
+(ADDRESS =(PROTOCOL = TCP)(HOST = market3-vip.example.com))(PORT = 1521))
+
+(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = media)))

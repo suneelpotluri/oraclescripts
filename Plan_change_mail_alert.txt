@@ -1,0 +1,90 @@
+Plan_Change_Alert.ksh
+
+#!/bin/ksh -x
+############################################################################
+#
+# Author      : Mark Ramsay
+#
+# History       Date          Name          Reason
+#               ----          ----          ------
+#               18 May 2011   Mark Ramsay   Version 1.
+#
+# Description
+#
+# This script generates a report that shows if a SQL Plan has changed
+# for a given SQL ID.  It is useful for tracking plans for stubborn pieces
+# of SQL that may have a few good plans and the occasional bad plan.
+#
+# The range of dates can be changed by setting SDS_range.  However,
+# this script would normally be scheduled each day the range will therefore
+# be 1.  i.e. Changes in the last 24hrs
+#
+# The user should set the variable SDS_sqlid to the SQLID that is being
+# monitored.  The variable SDS_hash_values should be set to the
+# plan_hash_values that are acceptable for the given SQLID.
+#
+# If a new plan_hash_value is generated for the given SQLID, then
+# the script will highlight this in the report.
+#
+# The report can then be mailed out to individuals to look into the plan
+# change.
+#
+############################################################################
+#
+# Define Variables
+#
+
+export ORACLE_SID=MYSID
+export ORACLE_HOME=$(grep ^$ORACLE_SID: /var/opt/oracle/oratab |awk -F\: '{print $2}')
+export ORACLE_BASE=/u01/app/oracle
+export PATH=.:/usr/local/bin:/bin:/usr/sbin:/usr/bin:$ORACLE_HOME/bin
+
+SDS_date=`/bin/date '+%e_%B_%Y'|sed -e 's/ //'`
+SDS_sqlid="'SQLID1','SQLID2'"
+SDS_hash_values="HASH1,HASH2"
+SDS_mail_addr=myemail@mydomain.com
+SDS_range=1
+
+SDS_output=`$ORACLE_HOME/bin/sqlplus -s '/ as sysdba' <<EOF
+
+set pagesize 0
+set feedback off
+set linesize 128
+set heading off
+set echo off
+
+SELECT distinct PLAN_HASH_VALUE
+FROM dba_hist_sqlstat q,
+    (
+    SELECT /*+ NO_MERGE */ MIN(snap_id) min_snap, MAX(snap_id) max_snap
+    FROM dba_hist_snapshot ss
+    WHERE ss.begin_interval_time BETWEEN (SYSDATE - $SDS_range) AND SYSDATE
+    ) s
+WHERE q.snap_id BETWEEN s.min_snap AND s.max_snap
+  AND q.sql_id IN ( $SDS_sqlid)
+  AND q.plan_hash_value not in
+($SDS_hash_values)
+/
+
+exit;
+EOF`
+
+if [ -z "$SDS_output" ];
+then
+  echo "All,
+    Explain Plan Change for SQLIDs: $SDS_sqlid        -    No
+
+Regards
+    " | mailx -s "Explain Plan Alert Report $SDS_date" $SDS_mail_addr
+else
+  echo "All,
+    Explain Plan Change for SQLIDs: $SDS_sqlid        -    Yes
+    DBA to investigate.
+    Plan Hash Values: $SDS_output
+
+Regards
+    " | mailx -s "Explain Plan Alert Report $SDS_date" $SDS_mail_addr
+fi
+
+exit 0
+

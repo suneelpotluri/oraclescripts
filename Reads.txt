@@ -1,0 +1,558 @@
+https://updates.oracle.com/download/6880880.html 
+
+ASM on Non-First Node (Second or Others) Fails to Start: PMON (ospid: nnnn): terminating the instance due to error 481 (Doc ID 1383737.1)
+
+https://www.hhutzler.de/blog/asm-cancel-a-drop-disk-operation/
+https://bdrouvot.wordpress.com/2014/08/25/a-closer-look-at-asm-rebalance-part-i-disks-have-been-added/
+
+http://karlarao.tiddlyspot.com/#%5B%5Bcpu%20-%20SillyLittleBenchmark%20-%20SLOB%5D%5D
+
+How to Identify Files With Imbalanced Allocation in an ASM Diskgroup (Doc ID 818171.1)
+Information to gather when diagnosing ASM space issues (Doc ID 351117.1)
+Script to Report the Percentage of Imbalance in all Mounted Diskgroups- Non Exadata/ODA (Doc ID 367445.1)
+ORA-15041 Diskgroup Space Exhausted (Doc ID 1367078.1)
+How To Setup ASM on Linux Using ASMLIB Disks, Raw Devices, Block Devices or UDEV Devices? (Doc ID 580153.1)
+https://jonathanlewis.wordpress.com/2018/07/09/historic-stats/
+
+ORA-15041 IN A DISKGROUP ALTHOUGH FREE_MB REPORTS SUFFICIENT SPACE (Doc ID 460155.1)
+12c ASM: Unable To Add New Disks With Dissimilar Size To 12.1.0.2 ASM Diskgroups (Normal or High Redundancy) Due To ORA-15410 (New 12c ASM Enhancement Validation/Constraint) (Doc ID 1938950.1)
+Information to gather when diagnosing ASM space issues (Doc ID 351117.1)
+ASM External Redundancy Diskgroups Present Large Imbalance (V$ASM_DISK.FREE_MB) In 11.2 or 12.1 Releases (Doc ID 1980292.1)
+https://antognini.ch/2010/10/tkprof-new-features-in-11gr2-11-2-0-2/
+https://asktom.oracle.com/pls/asktom/f?p=100:11:0::::P11_QUESTION_ID:3931724600346905308
+
+
+https://community.emc.com/thread/143652 =============>> I/O Explained for EMC
+http://ermanarslan.blogspot.com/2014/05/awr-analysis-part-1.html
+http://www.oraclenext.com/2018/03/reading-and-understanding-awr-report_19.html
+http://osamamustafa.blogspot.com/2012/06/understand-awr-report.html
+
+http://www.centrexcc.com/SQL%20Tuning%20with%20Statistics.ppt.pdf
+
+https://juliandontcheff.wordpress.com/2011/06/04/on-gathering-dictionary-statistics-do-i-analyze-the-sys-schema/
+
+https://docs.oracle.com/cd/E24693_01/appdev.11203/e23448/d_stats.htm#i1036927
+
+https://docs.oracle.com/cd/B28359_01/server.111/b28274/stats.htm#i41448
+
+https://docs.oracle.com/cd/B28359_01/server.111/b28274/stats.htm#i41857
+
+
+select operation,start_time from DBA_OPTSTAT_OPERATIONS order by start_time;
+
+
+https://gerardnico.com/db/oracle/statistics/table#get_table_stats
+
+
+Don't Forget System Level Statistics 
+
+
+
+If you do any work with performance tuning, you know the importance of Object Level statistics. Oracle uses this information to estimate how many rows will be returned by different steps in the plan. These estimates help the Optimizer form what it thinks is the best plan.
+
+ There are numerous subtopics that can have large impacts on SQL Statements. One statistics related item that is often overlooked is System Level Statistics.
+
+ When I talk about system level statistics I am referring to three different things:
+ 1. Fixed object statistics
+ 2. Data Dictionary statistics
+ 3. System stats.
+
+ If these items are not kept up to date, then you can see some performance degradation. Oracle has several blog posts detailing the importance of these statistics. These statistics should be updated following upgrades to the database software. The system statistics should be updated following any hardware changes.
+
+
+Fixed Object Statistics
+This is different from user level object statistics. For example if you are querying the EMP and DEPT tables then you usually will want to have accurate statistics on the tables which reflect the data distribution of values in the columns of those tables. I say usually because there may be exceptions to this rule.
+
+ You can check the status of the fixed object statistics using the following query:
+SELECT owner
+     , table_name
+     , last_analyzed
+FROM   dba_tab_statistics
+WHERE  table_name IN
+             (SELECT name
+              FROM   v$fixed_table
+              WHERE  type = 'TABLE'
+             )
+ORDER BY last_analyzed NULLS LAST;
+
+ Fixed Objects are the X$ objects defined in the database. These objects are not owned by regular users, so gathering stats on user level objects will not impact these objects. There is a different command, EXEC DBMS_STATS.GATHER_FIXED_OBJECTS_STATS, that will gather stats on these objects. The statistics should be run while the system is performing a normal workload. If there are significant updates to the workload then the statistics should be regathered. Also, the statistics should be regathered following any upgrades.
+
+ For more information about the importance of fixed objects can be seen here:
+https://blogs.oracle.com/optimizer/entry/fixed_objects_statistics_and_why
+
+
+Data Dictionary Statistics
+Similar to the fixed objects, data dictionary statistics are also used by the system to build plans for system queries. If these are not kept up to date you will see some performance issues related to queries against those objects.
+
+ You can check the status of data dictionary statistics with the following query:
+SELECT owner
+     , table_name
+     , last_analyzed
+FROM   dba_tab_statistics
+WHERE  owner='SYS'
+ORDER BY last_analyzed NULLS LAST;
+
+ The command to update these statistics is DBMS_STATS.GATHER_DICTIONARY_STATS.
+
+ At a minimum this should be run after every database upgrade. To keep these statistics up to date, you may choose to run the gather command more frequently such as every quarter.
+
+ For additional information you can also look at the My Oracle Support Document, How to Gather Statistics on Objects Owned by the 'SYS' User and 'Fixed' Objects (Doc ID 457926.1)
+
+
+System Statistics
+The system statistics collect information about the hardware, in particular CPU performance and I/O performance. The Oracle optimizer will use this information to determine the cost of a statement. If this data is not accurate then it can result in suboptimal plans. This data is collected with the command EXEC DBMS_STATS.GATHER_SYSTEM_STATS. As part of any hardware changes or database upgrades, these statistics should be recollected. Note that if you are running on Exadata, you should use the command EXEC DBMS_STATS.GATHER_SYSTEM_STATS(‘EXADATA’).
+
+Warning! There is a case where a bug caused the command to collect inaccurate information. Oracle bug 9842771 impacted the system statistics collected in release 11.2.0.2. So it is advised to review the values before and after collecting.
+
+ To check the system statistics use the following query
+
+select    *
+from    sys.aux_stats$;
+
+ These fixed object and system statistics provide a foundation that is used by the optimizer to impact many different statements. If you are collecting user level objects but not keeping the other statistics up to date then you are putting yourself at risk for poor performance.
+
+
+Now you can easily query the values of old stats in the SYSTEM_STATS_HISTORY table:
+
+ 
+-- Create a table to hold system stats info
+create table SYSTEM_STATS_HISTORY as
+(SELECT PVAL2 as STATUS,
+        SYSDATE as DSTART,
+        SYSDATE as DSTOP,
+        PVAL1 as FLAGS, 
+        aux_stats$.* FROM sys.aux_stats$ WHERE 0=1);
+ 
+
+To record the current system statistics, run this statement:
+
+ 
+-- Record the current system statistics, run this statement
+INSERT INTO SYSTEM_STATS_HISTORY 
+    SELECT (SELECT PVAL2 FROM sys.aux_stats$ where PNAME='STATUS') as STATUS,
+           (SELECT PVAL2 FROM sys.aux_stats$ WHERE PNAME='DSTART') as DSTART,
+           (SELECT PVAL2 FROM sys.aux_stats$ WHERE PNAME='DSTOP') as DSTOP,
+           (SELECT PVAL1 FROM sys.aux_stats$ WHERE PNAME='FLAGS') as FLAGS,
+           aux_stats$.*
+      FROM sys.aux_stats$
+     WHERE sname='SYSSTATS_MAIN'; 
+ 
+=========================
+
+
+Statistics - User Object, System, Fixed Object, and Dictionary Statistics Topics
+
+
+
+
+User Object Statistics
+http://www.dba-oracle.com/t_gather_stats_job.htm
+Improvement of AUTO sampling statistics gathering on 11g - The Oracle Optimizer Development Group 
+
+Statistics on Partitioned Tables
+Managing Statistics on Large Partitioned Tables - The Oracle Optimizer Development Group
+Oracle 11g Incremental Global Statistics on Partitioned Tables - Greg Rahn
+Data Warehousing and Statistics in Oracle 11g - Robin Moffatt 
+11g Incremental Partition Statistics Review - Randolf Geist
+Managing Optimizer Statistics in Oracle Database 11g - Maria Colgan -- Turn on incremental stats for all partitioned tables > 500mb
+  SELECT OWNER, SEGMENT_NAME, SUM (BYTES) / 1024 / 1024 / 1024 AS GB, 
+  DBMS_STATS.GET_PREFS('INCREMENTAL', OWNER, segment_name) AS INCREMENTAL
+    FROM DBA_SEGMENTS
+   WHERE SEGMENT_TYPE = 'TABLE PARTITION' AND SEGMENT_NAME NOT LIKE '%$%'
+GROUP BY OWNER, SEGMENT_NAME
+  HAVING SUM (BYTES) / 1024 / 1024 / 1024 >= 0.5
+ORDER BY 3 DESC;
+
+BEGIN
+  FOR cur IN (
+    SELECT OWNER, SEGMENT_NAME, SUM (BYTES) / 1024 / 1024 / 1024 AS GB
+      FROM DBA_SEGMENTS
+     WHERE SEGMENT_TYPE = 'TABLE PARTITION' 
+       AND SEGMENT_NAME NOT LIKE '%$%'
+  GROUP BY OWNER, SEGMENT_NAME
+    HAVING SUM (BYTES) / 1024 / 1024 / 1024 >= 0.5)
+  LOOP
+    DBMS_OUTPUT.PUT_LINE('Processing '||cur.SEGMENT_NAME);
+    DBMS_STATS.set_table_prefs(cur.owner, cur.segment_name, 'INCREMENTAL', 'TRUE');
+
+  END LOOP;
+END;
+/
+
+
+
+System Statistics
+Recording Oracle System Stats for Historical Analysis 
+
+Fixed Object Statistics
+Oracle Optimizer Blog - Fixed Object Statistics and Why They Are Important 
+
+Dictionary Statistics
+exec dbms_stats.gather_dictionary_stats;
+
+
+
+More Statistics Topics...
+
+
+Statistics Freshness Check
+
+
+
+
+Find Candidates for Statistics Gathering
+Anything that has more than 10% changes (inserts+deletes+updates) since last analyze should probably be analyzed again. This can be checked Oracle's Table Monitoring feature. This query will show a list of database tables with the most changed first. 
+Verify Table Monitoring is On
+
+Survey table monitoring
+SELECT MONITORING, 
+       COUNT(*)
+  FROM USER_TABLES 
+GROUP BY MONITORING;
+
+
+Turn table monitoring on for 1 table
+ALTER TABLE [TABLE_NAME] MONITORING;
+
+
+Turn table monitoring on for all tables that need it
+DECLARE
+  my_sql VARCHAR2(256);
+BEGIN
+FOR c1 IN (SELECT TABLE_NAME 
+           FROM USER_TABLES 
+           WHERE MONITORING='NO')
+LOOP
+  my_sql := 'ALTER TABLE ' || c1.TABLE_NAME || ' MONITORING');
+  execute immediate my_sql;
+  
+END LOOP;
+END;
+/
+
+
+Updating Monitoring Information
+exec DBMS_STATS.FLUSH_DATABASE_MONITORING_INFO();
+
+
+View data about monitored tables
+This query will give information about table monitoring since the table's last analyze. -- Statistics Freshness
+-- David Mann    http://ba6.us
+-- Display Change % and details for monitored tables. These tables are
+-- candidates for statistics gathering once they hit the STALE_PERCENT 
+-- threshold defined in sys.optstat_hist_control$
+SELECT ATM.TABLE_OWNER,  
+       ATM.TABLE_NAME,  
+       ATM.PARTITION_NAME as Part,
+       ATM.SUBPARTITION_NAME as SubPart, 
+       AT.NUM_ROWS as Analyzed_NumRows,  
+       ATM.INSERTS,  
+       ATM.UPDATES,  
+       ATM.DELETES,  
+      (ATM.INSERTS+ATM.UPDATES+ATM.DELETES) as Changes,  
+      ROUND(((ATM.INSERTS+ATM.UPDATES+ATM.DELETES)/NUM_ROWS)*100,2) as STALE_PCT,  
+      (SELECT LAST_ANALYZED FROM ALL_TABLES WHERE OWNER=ATM.TABLE_OWNER and TABLE_NAME=ATM.TABLE_NAME) as LAST_ANALYZED  
+ FROM ALL_TAB_MODIFICATIONS ATM,   
+      ALL_TABLES AT
+WHERE ATM.TABLE_OWNER=AT.OWNER  
+  AND ATM.TABLE_NAME=AT.TABLE_NAME  
+  AND ATM.TABLE_NAME NOT LIKE 'BIN$%' 
+  AND ATM.TABLE_OWNER NOT IN ('SYS','SYSTEM')  
+  AND NUM_ROWS  0  
+ORDER BY 10 DESC;
+
+Note that there are some quirks with updates to _TAB_MODIFICATIONS: o Stats flush to _TAB_MODIFICATIONS are noted as every 3 hours in 762738.1 o If users modify an object in another schema, those DML counts do not show up in USER_TAB_MODIFICATIONS 
+References
+Oracle 10.2 Documentation - Determining Stale Statistics
+
+Adding/Removing Histograms on Columns
+
+
+
+http://www.dbaref.com/home/database-monitoring-and-troubleshooting/howtoquicklyaddremovecolumnstatisticshistogramsforacolumn https://blogs.oracle.com/optimizer/entry/how_do_i_drop_an_existing_histogram_on_a_column_and_stop_the_auto_stats_gathering_job_from_creating
+
+
+Browsing Current Table and Column Statistics
+
+
+
+
+Column Monitoring
+How have columns been used in SQL statements? The types of joins done on a column and how it is involved in the WHERE clause of queries may affect CBO behavior. SELECT * FROM (
+    SELECT (SELECT username FROM dba_users WHERE user_id = o.owner#) AS owner, 
+           o.NAME AS table_name, 
+           c.NAME AS column_name, 
+           o.obj# AS table_object_id,
+           cu.intcol# AS intcol#, 
+           cu.equality_preds AS equality, 
+           cu.equijoin_preds AS equijoin,
+           cu.nonequijoin_preds AS noneequijoin, 
+           cu.range_preds AS RANGE, 
+           cu.like_preds AS "LIKE", 
+           cu.null_preds AS "NULL",
+           cu.TIMESTAMP
+        FROM SYS.col$ c, SYS.col_usage$ cu, SYS.obj$ o, SYS.user$ u
+        WHERE c.obj# = cu.obj#(+) AND c.intcol# = cu.intcol#(+) AND c.obj# = o.obj# AND o.owner# = u.user#) 
+      WHERE OWNER='&OWNERNAME.' AND TABLE_NAME='&TABLENAME.';
+
+
+Table Statistics
+SELECT * 
+  FROM DBA_TAB_STATISTICS 
+ WHERE owner='&OWNERNAME.'
+ ORDER BY TABLE_NAME;
+
+
+Partition Statistics
+SELECT * 
+  FROM DBA_TAB_STATISTICS 
+ WHERE OWNER='&OWNER.' 
+   AND PARTITION_NAME IS NOT NULL 
+   AND TABLE_NAME NOT LIKE 'BIN$%'
+ ORDER BY table_name, partition_position;
+
+
+Column Statistics
+SELECT *
+  FROM DBA_TAB_COL_STATISTICS tcs 
+ WHERE tcs.owner = '&OWNERNAME.' AND tcs.table_name = '&TABLENAME.'
+ ORDER BY 1,2,3;
+
+SELECT TABLE_NAME,  
+       COLUMN_NAME, 
+       NUM_DISTINCT, 
+       (SELECT NUM_ROWS FROM USER_TABLES WHERE TABLE_NAME=tcs.TABLE_NAME) as NUM_ROWS, 
+       SAMPLE_SIZE,
+       HISTOGRAM,
+       NUM_BUCKETS
+  FROM USER_TAB_COL_STATISTICS tcs 
+ WHERE lower(tcs.table_name) IN ('')
+ ORDER BY 1,2,3;
+
+
+Are histograms in use?
+SELECT TABLE_NAME, 
+       COLUMN_NAME, 
+       COUNT(*) 
+  FROM USER_TAB_HISTOGRAMS 
+ GROUP BY TABLE_NAME, 
+          COLUMN_NAME 
+HAVING COUNT(*) > 2 ;
+
+
+
+Browsing Historical Table and Column Statistics
+
+
+
+
+Historical statistics for the past 31 days are stored in SYS tables/SYSAUX tablespaceon 10g and 11g Oracle databases. So whenever the nightly Statistics Gathering job regenerates statistics for an object, the the old value is stored in these history tables. Old historical stats past the time limit are purged as needed. The retention period can be modified using the ALTER_STATS_HISTORY_RETENTION procedure. Some ERP systems have a lot of turnover in statistics and might benefit from a shorter retention period.
+
+Statistics Gathering Job History
+
+Check the history of the GATHER_STATS_JOB
+SELECT * FROM DBA_SCHEDULER_JOBS WHERE JOB_NAME = 'GATHER_STATS_JOB';
+
+
+Table Stats History
+ -- All stats history for user objects
+ -- Sort: most recent at top
+ SELECT do.owner, 
+        do.object_name, 
+        oth.* 
+   FROM SYS.WRI$_OPTSTAT_TAB_HISTORY oth join dba_objects do on oth.obj#=do.object_id
+  WHERE OWNER NOT IN ('SYS','SYSTEM')
+  ORDER BY savtime desc;
+-- Get historical Statistics info for 1+ Tables
+WITH TableList as (select object_id, object_name 
+               from dba_objects 
+              where object_type='TABLE' 
+                and object_name IN ('TABLE_1','TABLE_2',...)) 
+select OBJECT_NAME as TABLE_NAME, 
+       TO_CHAR(ANALYZETIME,'MM/DD/YYYY HH24:MI') as AnalyzeTime_Formatted,
+       OTH.*
+  From SYS.WRI$_OPTSTAT_TAB_HISTORY OTH, TableList 
+ where OTH.OBJ# = TableList.OBJECT_ID
+ ORDER BY table_name, analyzetime;
+
+
+
+Histogram Stats History Summary
+-- Get histogram summary info for 1 column
+WITH TabColInfo AS (select OBJ#, COL# from sys.COL$ where OBJ# in (select object_id 
+               from dba_objects 
+              where object_type='TABLE' 
+                and object_name='&my_table_name.')
+              and NAME='&my_column_name.')
+select SAVTIME, COUNT(BUCKET) From SYS.WRI$_OPTSTAT_HISTGRM_HISTORY HH, TabColInfo TCI
+WHERE HH.OBJ#=TCI.OBJ# and HH.INTCOL#=TCI.COL# GROUP BY SAVTIME;
+
+
+
+Default Stats Jobs
+
+
+
+
+Show current Global defaults for object stats gathering
+These can be set with the DBMS_STATS.SET_GLOBAL_PREFS procedure. SELECT sname as Name,
+       SVAL1 || SPARE4 AS Value
+  FROM sys.optstat_hist_control$
+ ORDER BY 1;
+
+
+View info About Nightly Stats Collection Jobs (10g)
+SELECT JOB_NAME, 
+       SCHEDULE_NAME, 
+       JOB_CLASS, 
+       RUN_COUNT, 
+       LAST_START_DATE, 
+       LAST_RUN_DURATION, 
+       NEXT_RUN_DATE 
+  FROM DBA_SCHEDULER_JOBS 
+ WHERE JOB_NAME = 'GATHER_STATS_JOB';
+
+
+View info About Nightly Stats Collection Jobs (11g)
+select window_name, job_start_time, job_duration
+   from dba_autotask_job_history
+  where client_name = 'auto optimizer stats collection'
+  order by job_start_time desc;
+
+
+
+Dynamic Sampling
+
+
+
+
+https://blogs.oracle.com/optimizer/entry/dynamic_sampling_and_its_impact...
+
+
+Exporting/Importing Schema Statistics
+
+
+
+
+1. Create the statistics table.
+exec DBMS_STATS.CREATE_STAT_TABLE(ownname =>'SCHEMA_NAME' ,stattab => 'STATS_TABLE' , tblspace => 'STATS_TABLESPACE');
+
+Example: exec DBMS_STATS.CREATE_STAT_TABLE(ownname =>'SYSTEM',stattab => 'STATS_TABLE');
+
+
+2. Export statistics to statistics table
+EXEC DBMS_STATS.EXPORT_SCHEMA_STATS('ORIGINAL_SCHEMA' ,'STATS_TABLE',NULL,'SYSTEM');
+
+
+3. Import statistics into the data dictionary.
+exec DBMS_STATS.IMPORT_SCHEMA_STATS('NEW_SCHEMA','STATS_TABLE',NULL,'SYSTEM');
+
+
+4. Drop the statistics table.
+exec DBMS_STATS.DROP_STAT_TABLE('SYSTEM','STATS_TABLE');
+
+
+
+Gathering Stats with SIZE AUTO
+
+
+
+
+Pros
+Works for most cases. Job is automatically created and scheduled when database is created. 
+Cons
+•Not always clear when histograms will be used. 
+•Column usage can affect stats gathering, ie difference between Production load and Test load on the same datasets
+See Hermant's article on Column Usage affecting histograms here, here, and here. 
+
+Rolling Back Statistics
+
+
+
+
+If your statistics get corrupted or mismanaged for any reason you may be able to roll back to a previous version of your stats. Here is how you can do it for 1 schema: 
+
+1) Backup the current stats for your schema
+BEGIN
+  dbms_stats.export_schema_stats( ownname=>'[SCHEMA_NAME]'
+                                , stattab=>'STAT_BACKUP_[SCHEMA_NAME]_[DATE]'
+                                , statown => 'SYS'
+                                , statid=>'CURRENT_STATS');
+END;
+/
+
+Note: You can watch progress of this operation by watching long operations view (SQL is below). 
+2) Delete the schema's stats
+This is for safety. If you happened to have new stats generated recently these will still be in play unless you delete them to start with a clean slate. BEGIN
+  DBMS_STATS.DELETE_SCHEMA_STATS (
+    ownname          => '[SCHEMA_NAME]'
+  );
+  COMMIT;
+END;
+/
+
+Note: You can watch progress of this operation by watching long operations view (SQL is below). 
+3) Load stats from a previous point in time
+
+Substitute appropriate date in the following to_timestamp() function call. 
+BEGIN
+  DBMS_STATS.RESTORE_SCHEMA_STATS( 
+   ownname => '[SCHEMA_NAME]', 
+   as_of_timestamp  =>to_timestamp('04-SEP-2014 07.00.00.000000 PM','dd-mon-yyyy hh.mi.ss.ff am') );
+commit;
+END;
+/
+
+Note: You can watch progress of this operation by watching long operations view (SQL is below). 
+4) Flush shared pool
+Run the following on all instances: ALTER SYSTEM FLUSH SHARED POOL;
+
+Your reverted stats should now be in play for all newly issued queries. 
+Reference : Long operations view
+SELECT ROUND(sofar/totalwork*100,2), v$session_longops.*
+  FROM v$session_longops
+ WHERE sofar  totalwork
+ ORDER BY target, sid;
+
+
+
+Statistics on Partitioned Tables
+
+
+
+
+Table NUM_ROWS vs Sum of Partition NUM_ROWS
+WITH 
+     -- List all user tables that have partitions
+     TabList AS (
+     SELECT DISTINCT TABLE_OWNER, TABLE_NAME 
+       FROM dba_tab_partitions 
+      WHERE TABLE_OWNER NOT IN ('SYSTEM','SYS') ORDER BY 1,2),
+     -- Summarize partition details
+     PartTotals AS (
+     SELECT TABLE_OWNER, TABLE_NAME, SUM(NUM_ROWS) as PARTS_TOTAL_ROWS, MAX(LAST_ANALYZED) as MAX_PART_LAST_ANALYZED, MIN(LAST_ANALYZED) as MIN_PART_LAST_ANALYZED 
+       FROM DBA_TAB_PARTITIONS 
+      GROUP BY TABLE_OWNER, TABLE_NAME),
+     -- Summarize Table vs Partition NUM_ROWS and ANALYZE_DATE info
+     Summary AS (
+     SELECT TABLIST.TABLE_OWNER, 
+            TABLIST.TABLE_NAME, 
+            DBA_TABLES.LAST_ANALYZED as TAB_LAST_ANALYZED,
+            PartTotals.MIN_PART_LAST_ANALYZED,
+            PartTotals.MAX_PART_LAST_ANALYZED,
+            DBA_TABLES.NUM_ROWS as TABLE_ROWS,
+            PartTotals.PARTS_TOTAL_ROWS,
+            ABS(NVL(DBA_TABLES.NUM_ROWS,0)-NVL(PartTotals.PARTS_TOTAL_ROWS,0)) as RowDifference,
+            GREATEST(DBA_TABLES.NUM_ROWS,PartTotals.PARTS_TOTAL_ROWS) as MaxNumRows
+       FROM TabList, DBA_TABLES, PartTotals
+      WHERE TabList.TABLE_OWNER=DBA_TABLES.OWNER and TabList.TABLE_NAME=DBA_TABLES.TABLE_NAME
+        AND TabList.TABLE_OWNER=PartTotals.TABLE_OWNER AND TabList.TABLE_NAME=PartTotals.TABLE_NAME)
+-- Calculate Percent Difference so we can see how much the Table vs Partition Num Rows differ
+SELECT SUMMARY.*
+       ,ROUND(Summary.RowDifference/NVL(MaxNumRows+1,1)*100,2) AS PctDiff 
+  FROM SUMMARY 
+ ORDER BY ROUND(Summary.RowDifference/NVL(MaxNumRows+1,1)*100,2);
+
+
+Other Articles
+http://blogs.oracle.com/optimizer/entry/maintaining_statistics_on_large_partitioned_tables

@@ -1,0 +1,653 @@
+SQL> show parameter audit
+
+NAME                                 TYPE
+------------------------------------ --------------------------------
+VALUE
+------------------------------
+audit_file_dest                      string
+/oracle/app/admin/epprod/adump
+audit_sys_operations                 boolean
+TRUE
+audit_syslog_level                   string
+LOCAL1.WARNING
+audit_trail                          string
+OS
+unified_audit_sga_queue_size         integer
+
+NAME                                 TYPE
+------------------------------------ --------------------------------
+VALUE
+------------------------------
+1048576
+
+
+SQL> select username,returncode,action_name,sessionid,proxy_sessionid
+  2  from dba_audit_session;
+
+no rows selected
+
+SQL> select username,returncode,action_name,comment_text,sessionid,proxy_sessionid from dba_audit_trail order by sessionid;
+
+no rows selected
+
+
+SQL> /
+
+USER_NAME           PROXY_NAME AUDIT_OPTION                             SUCCESS    FAILURE
+------------------- ---------- ---------------------------------------- ---------- ----------
+ANANTHS                        ALTER SYSTEM                             BY ACCESS  BY ACCESS
+ANANTHS                        AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+ANANTHS                        CLUSTER                                  BY ACCESS  BY ACCESS
+ANANTHS                        CONTEXT                                  BY ACCESS  BY ACCESS
+ANANTHS                        CREATE SESSION                           BY ACCESS  BY ACCESS
+ANANTHS                        DATABASE LINK                            BY ACCESS  BY ACCESS
+ANANTHS                        DIMENSION                                BY ACCESS  BY ACCESS
+ANANTHS                        DIRECTORY                                BY ACCESS  BY ACCESS
+ANANTHS                        INDEX                                    BY ACCESS  BY ACCESS
+ANANTHS                        MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+ANANTHS                        MINING MODEL                             BY ACCESS  BY ACCESS
+ANANTHS                        NOT EXISTS                               BY ACCESS  BY ACCESS
+ANANTHS                        PROCEDURE                                BY ACCESS  BY ACCESS
+ANANTHS                        PROFILE                                  BY ACCESS  BY ACCESS
+ANANTHS                        PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+ANANTHS                        PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+ANANTHS                        ROLE                                     BY ACCESS  BY ACCESS
+ANANTHS                        ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+ANANTHS                        SEQUENCE                                 BY ACCESS  BY ACCESS
+ANANTHS                        SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+ANANTHS                        SYNONYM                                  BY ACCESS  BY ACCESS
+ANANTHS                        SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+ANANTHS                        SYSTEM GRANT                             BY ACCESS  BY ACCESS
+ANANTHS                        TABLE                                    BY ACCESS  BY ACCESS
+ANANTHS                        TABLESPACE                               BY ACCESS  BY ACCESS
+ANANTHS                        TRIGGER                                  BY ACCESS  BY ACCESS
+ANANTHS                        TYPE                                     BY ACCESS  BY ACCESS
+ANANTHS                        USER                                     BY ACCESS  BY ACCESS
+ANANTHS                        VIEW                                     BY ACCESS  BY ACCESS
+ARUNAK                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+ARUNAK                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+ARUNAK                         CLUSTER                                  BY ACCESS  BY ACCESS
+ARUNAK                         CONTEXT                                  BY ACCESS  BY ACCESS
+ARUNAK                         CREATE SESSION                           BY ACCESS  BY ACCESS
+ARUNAK                         DATABASE LINK                            BY ACCESS  BY ACCESS
+ARUNAK                         DIMENSION                                BY ACCESS  BY ACCESS
+ARUNAK                         DIRECTORY                                BY ACCESS  BY ACCESS
+ARUNAK                         INDEX                                    BY ACCESS  BY ACCESS
+ARUNAK                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+ARUNAK                         MINING MODEL                             BY ACCESS  BY ACCESS
+ARUNAK                         NOT EXISTS                               BY ACCESS  BY ACCESS
+ARUNAK                         PROCEDURE                                BY ACCESS  BY ACCESS
+ARUNAK                         PROFILE                                  BY ACCESS  BY ACCESS
+ARUNAK                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+ARUNAK                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+ARUNAK                         ROLE                                     BY ACCESS  BY ACCESS
+ARUNAK                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+ARUNAK                         SEQUENCE                                 BY ACCESS  BY ACCESS
+ARUNAK                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+ARUNAK                         SYNONYM                                  BY ACCESS  BY ACCESS
+ARUNAK                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+ARUNAK                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+ARUNAK                         TABLE                                    BY ACCESS  BY ACCESS
+ARUNAK                         TABLESPACE                               BY ACCESS  BY ACCESS
+ARUNAK                         TRIGGER                                  BY ACCESS  BY ACCESS
+ARUNAK                         TYPE                                     BY ACCESS  BY ACCESS
+ARUNAK                         USER                                     BY ACCESS  BY ACCESS
+ARUNAK                         VIEW                                     BY ACCESS  BY ACCESS
+AVIRAL                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+AVIRAL                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+AVIRAL                         CLUSTER                                  BY ACCESS  BY ACCESS
+AVIRAL                         CONTEXT                                  BY ACCESS  BY ACCESS
+AVIRAL                         CREATE SESSION                           BY ACCESS  BY ACCESS
+AVIRAL                         DATABASE LINK                            BY ACCESS  BY ACCESS
+AVIRAL                         DIMENSION                                BY ACCESS  BY ACCESS
+AVIRAL                         DIRECTORY                                BY ACCESS  BY ACCESS
+AVIRAL                         INDEX                                    BY ACCESS  BY ACCESS
+AVIRAL                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+AVIRAL                         MINING MODEL                             BY ACCESS  BY ACCESS
+AVIRAL                         NOT EXISTS                               BY ACCESS  BY ACCESS
+AVIRAL                         PROCEDURE                                BY ACCESS  BY ACCESS
+AVIRAL                         PROFILE                                  BY ACCESS  BY ACCESS
+AVIRAL                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+AVIRAL                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+AVIRAL                         ROLE                                     BY ACCESS  BY ACCESS
+AVIRAL                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+AVIRAL                         SEQUENCE                                 BY ACCESS  BY ACCESS
+AVIRAL                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+AVIRAL                         SYNONYM                                  BY ACCESS  BY ACCESS
+AVIRAL                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+AVIRAL                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+AVIRAL                         TABLE                                    BY ACCESS  BY ACCESS
+AVIRAL                         TABLESPACE                               BY ACCESS  BY ACCESS
+AVIRAL                         TRIGGER                                  BY ACCESS  BY ACCESS
+AVIRAL                         TYPE                                     BY ACCESS  BY ACCESS
+AVIRAL                         USER                                     BY ACCESS  BY ACCESS
+AVIRAL                         VIEW                                     BY ACCESS  BY ACCESS
+DILEEPT                        ALTER SYSTEM                             BY ACCESS  BY ACCESS
+DILEEPT                        AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+DILEEPT                        CLUSTER                                  BY ACCESS  BY ACCESS
+DILEEPT                        CONTEXT                                  BY ACCESS  BY ACCESS
+DILEEPT                        CREATE SESSION                           BY ACCESS  BY ACCESS
+DILEEPT                        DATABASE LINK                            BY ACCESS  BY ACCESS
+DILEEPT                        DIMENSION                                BY ACCESS  BY ACCESS
+DILEEPT                        DIRECTORY                                BY ACCESS  BY ACCESS
+DILEEPT                        INDEX                                    BY ACCESS  BY ACCESS
+DILEEPT                        MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+DILEEPT                        MINING MODEL                             BY ACCESS  BY ACCESS
+DILEEPT                        NOT EXISTS                               BY ACCESS  BY ACCESS
+DILEEPT                        PROCEDURE                                BY ACCESS  BY ACCESS
+DILEEPT                        PROFILE                                  BY ACCESS  BY ACCESS
+DILEEPT                        PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+DILEEPT                        PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+DILEEPT                        ROLE                                     BY ACCESS  BY ACCESS
+DILEEPT                        ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+DILEEPT                        SEQUENCE                                 BY ACCESS  BY ACCESS
+DILEEPT                        SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+DILEEPT                        SYNONYM                                  BY ACCESS  BY ACCESS
+DILEEPT                        SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+DILEEPT                        SYSTEM GRANT                             BY ACCESS  BY ACCESS
+DILEEPT                        TABLE                                    BY ACCESS  BY ACCESS
+DILEEPT                        TABLESPACE                               BY ACCESS  BY ACCESS
+DILEEPT                        TRIGGER                                  BY ACCESS  BY ACCESS
+DILEEPT                        TYPE                                     BY ACCESS  BY ACCESS
+DILEEPT                        USER                                     BY ACCESS  BY ACCESS
+DILEEPT                        VIEW                                     BY ACCESS  BY ACCESS
+GGUPTA                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+GGUPTA                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+GGUPTA                         CLUSTER                                  BY ACCESS  BY ACCESS
+GGUPTA                         CONTEXT                                  BY ACCESS  BY ACCESS
+GGUPTA                         CREATE SESSION                           BY ACCESS  BY ACCESS
+GGUPTA                         DATABASE LINK                            BY ACCESS  BY ACCESS
+GGUPTA                         DIMENSION                                BY ACCESS  BY ACCESS
+GGUPTA                         DIRECTORY                                BY ACCESS  BY ACCESS
+GGUPTA                         INDEX                                    BY ACCESS  BY ACCESS
+GGUPTA                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+GGUPTA                         MINING MODEL                             BY ACCESS  BY ACCESS
+GGUPTA                         NOT EXISTS                               BY ACCESS  BY ACCESS
+GGUPTA                         PROCEDURE                                BY ACCESS  BY ACCESS
+GGUPTA                         PROFILE                                  BY ACCESS  BY ACCESS
+GGUPTA                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+GGUPTA                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+GGUPTA                         ROLE                                     BY ACCESS  BY ACCESS
+GGUPTA                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+GGUPTA                         SEQUENCE                                 BY ACCESS  BY ACCESS
+GGUPTA                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+GGUPTA                         SYNONYM                                  BY ACCESS  BY ACCESS
+GGUPTA                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+GGUPTA                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+GGUPTA                         TABLE                                    BY ACCESS  BY ACCESS
+GGUPTA                         TABLESPACE                               BY ACCESS  BY ACCESS
+GGUPTA                         TRIGGER                                  BY ACCESS  BY ACCESS
+GGUPTA                         TYPE                                     BY ACCESS  BY ACCESS
+GGUPTA                         USER                                     BY ACCESS  BY ACCESS
+GGUPTA                         VIEW                                     BY ACCESS  BY ACCESS
+HARINDERS                      ALTER SYSTEM                             BY ACCESS  BY ACCESS
+HARINDERS                      AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+HARINDERS                      CLUSTER                                  BY ACCESS  BY ACCESS
+HARINDERS                      CONTEXT                                  BY ACCESS  BY ACCESS
+HARINDERS                      CREATE SESSION                           BY ACCESS  BY ACCESS
+HARINDERS                      DATABASE LINK                            BY ACCESS  BY ACCESS
+HARINDERS                      DIMENSION                                BY ACCESS  BY ACCESS
+HARINDERS                      DIRECTORY                                BY ACCESS  BY ACCESS
+HARINDERS                      INDEX                                    BY ACCESS  BY ACCESS
+HARINDERS                      MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+HARINDERS                      MINING MODEL                             BY ACCESS  BY ACCESS
+HARINDERS                      NOT EXISTS                               BY ACCESS  BY ACCESS
+HARINDERS                      PROCEDURE                                BY ACCESS  BY ACCESS
+HARINDERS                      PROFILE                                  BY ACCESS  BY ACCESS
+HARINDERS                      PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+HARINDERS                      PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+HARINDERS                      ROLE                                     BY ACCESS  BY ACCESS
+HARINDERS                      ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+HARINDERS                      SEQUENCE                                 BY ACCESS  BY ACCESS
+HARINDERS                      SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+HARINDERS                      SYNONYM                                  BY ACCESS  BY ACCESS
+HARINDERS                      SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+HARINDERS                      SYSTEM GRANT                             BY ACCESS  BY ACCESS
+HARINDERS                      TABLE                                    BY ACCESS  BY ACCESS
+HARINDERS                      TABLESPACE                               BY ACCESS  BY ACCESS
+HARINDERS                      TRIGGER                                  BY ACCESS  BY ACCESS
+HARINDERS                      TYPE                                     BY ACCESS  BY ACCESS
+HARINDERS                      USER                                     BY ACCESS  BY ACCESS
+HARINDERS                      VIEW                                     BY ACCESS  BY ACCESS
+KASHIF                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+KASHIF                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+KASHIF                         CLUSTER                                  BY ACCESS  BY ACCESS
+KASHIF                         CONTEXT                                  BY ACCESS  BY ACCESS
+KASHIF                         CREATE SESSION                           BY ACCESS  BY ACCESS
+KASHIF                         DATABASE LINK                            BY ACCESS  BY ACCESS
+KASHIF                         DIMENSION                                BY ACCESS  BY ACCESS
+KASHIF                         DIRECTORY                                BY ACCESS  BY ACCESS
+KASHIF                         INDEX                                    BY ACCESS  BY ACCESS
+KASHIF                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+KASHIF                         MINING MODEL                             BY ACCESS  BY ACCESS
+KASHIF                         NOT EXISTS                               BY ACCESS  BY ACCESS
+KASHIF                         PROCEDURE                                BY ACCESS  BY ACCESS
+KASHIF                         PROFILE                                  BY ACCESS  BY ACCESS
+KASHIF                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+KASHIF                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+KASHIF                         ROLE                                     BY ACCESS  BY ACCESS
+KASHIF                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+KASHIF                         SEQUENCE                                 BY ACCESS  BY ACCESS
+KASHIF                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+KASHIF                         SYNONYM                                  BY ACCESS  BY ACCESS
+KASHIF                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+KASHIF                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+KASHIF                         TABLE                                    BY ACCESS  BY ACCESS
+KASHIF                         TABLESPACE                               BY ACCESS  BY ACCESS
+KASHIF                         TRIGGER                                  BY ACCESS  BY ACCESS
+KASHIF                         TYPE                                     BY ACCESS  BY ACCESS
+KASHIF                         USER                                     BY ACCESS  BY ACCESS
+KASHIF                         VIEW                                     BY ACCESS  BY ACCESS
+LCR_SATYA                      ALTER SYSTEM                             BY ACCESS  BY ACCESS
+LCR_SATYA                      AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+LCR_SATYA                      CLUSTER                                  BY ACCESS  BY ACCESS
+LCR_SATYA                      CONTEXT                                  BY ACCESS  BY ACCESS
+LCR_SATYA                      CREATE SESSION                           BY ACCESS  BY ACCESS
+LCR_SATYA                      DATABASE LINK                            BY ACCESS  BY ACCESS
+LCR_SATYA                      DIMENSION                                BY ACCESS  BY ACCESS
+LCR_SATYA                      DIRECTORY                                BY ACCESS  BY ACCESS
+LCR_SATYA                      INDEX                                    BY ACCESS  BY ACCESS
+LCR_SATYA                      MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+LCR_SATYA                      MINING MODEL                             BY ACCESS  BY ACCESS
+LCR_SATYA                      NOT EXISTS                               BY ACCESS  BY ACCESS
+LCR_SATYA                      PROCEDURE                                BY ACCESS  BY ACCESS
+LCR_SATYA                      PROFILE                                  BY ACCESS  BY ACCESS
+LCR_SATYA                      PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+LCR_SATYA                      PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+LCR_SATYA                      ROLE                                     BY ACCESS  BY ACCESS
+LCR_SATYA                      ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+LCR_SATYA                      SEQUENCE                                 BY ACCESS  BY ACCESS
+LCR_SATYA                      SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+LCR_SATYA                      SYNONYM                                  BY ACCESS  BY ACCESS
+LCR_SATYA                      SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+LCR_SATYA                      SYSTEM GRANT                             BY ACCESS  BY ACCESS
+LCR_SATYA                      TABLE                                    BY ACCESS  BY ACCESS
+LCR_SATYA                      TABLESPACE                               BY ACCESS  BY ACCESS
+LCR_SATYA                      TRIGGER                                  BY ACCESS  BY ACCESS
+LCR_SATYA                      TYPE                                     BY ACCESS  BY ACCESS
+LCR_SATYA                      USER                                     BY ACCESS  BY ACCESS
+LCR_SATYA                      VIEW                                     BY ACCESS  BY ACCESS
+LOKESH                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+LOKESH                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+LOKESH                         CLUSTER                                  BY ACCESS  BY ACCESS
+LOKESH                         CONTEXT                                  BY ACCESS  BY ACCESS
+LOKESH                         CREATE SESSION                           BY ACCESS  BY ACCESS
+LOKESH                         DATABASE LINK                            BY ACCESS  BY ACCESS
+LOKESH                         DIMENSION                                BY ACCESS  BY ACCESS
+LOKESH                         DIRECTORY                                BY ACCESS  BY ACCESS
+LOKESH                         INDEX                                    BY ACCESS  BY ACCESS
+LOKESH                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+LOKESH                         MINING MODEL                             BY ACCESS  BY ACCESS
+LOKESH                         NOT EXISTS                               BY ACCESS  BY ACCESS
+LOKESH                         PROCEDURE                                BY ACCESS  BY ACCESS
+LOKESH                         PROFILE                                  BY ACCESS  BY ACCESS
+LOKESH                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+LOKESH                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+LOKESH                         ROLE                                     BY ACCESS  BY ACCESS
+LOKESH                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+LOKESH                         SEQUENCE                                 BY ACCESS  BY ACCESS
+LOKESH                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+LOKESH                         SYNONYM                                  BY ACCESS  BY ACCESS
+LOKESH                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+LOKESH                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+LOKESH                         TABLE                                    BY ACCESS  BY ACCESS
+LOKESH                         TABLESPACE                               BY ACCESS  BY ACCESS
+LOKESH                         TRIGGER                                  BY ACCESS  BY ACCESS
+LOKESH                         TYPE                                     BY ACCESS  BY ACCESS
+LOKESH                         USER                                     BY ACCESS  BY ACCESS
+LOKESH                         VIEW                                     BY ACCESS  BY ACCESS
+RANJITHR                       ALTER SYSTEM                             BY ACCESS  BY ACCESS
+RANJITHR                       AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+RANJITHR                       CLUSTER                                  BY ACCESS  BY ACCESS
+RANJITHR                       CONTEXT                                  BY ACCESS  BY ACCESS
+RANJITHR                       CREATE SESSION                           BY ACCESS  BY ACCESS
+RANJITHR                       DATABASE LINK                            BY ACCESS  BY ACCESS
+RANJITHR                       DIMENSION                                BY ACCESS  BY ACCESS
+RANJITHR                       DIRECTORY                                BY ACCESS  BY ACCESS
+RANJITHR                       INDEX                                    BY ACCESS  BY ACCESS
+RANJITHR                       MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+RANJITHR                       MINING MODEL                             BY ACCESS  BY ACCESS
+RANJITHR                       NOT EXISTS                               BY ACCESS  BY ACCESS
+RANJITHR                       PROCEDURE                                BY ACCESS  BY ACCESS
+RANJITHR                       PROFILE                                  BY ACCESS  BY ACCESS
+RANJITHR                       PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+RANJITHR                       PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+RANJITHR                       ROLE                                     BY ACCESS  BY ACCESS
+RANJITHR                       ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+RANJITHR                       SEQUENCE                                 BY ACCESS  BY ACCESS
+RANJITHR                       SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+RANJITHR                       SYNONYM                                  BY ACCESS  BY ACCESS
+RANJITHR                       SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+RANJITHR                       SYSTEM GRANT                             BY ACCESS  BY ACCESS
+RANJITHR                       TABLE                                    BY ACCESS  BY ACCESS
+RANJITHR                       TABLESPACE                               BY ACCESS  BY ACCESS
+RANJITHR                       TRIGGER                                  BY ACCESS  BY ACCESS
+RANJITHR                       TYPE                                     BY ACCESS  BY ACCESS
+RANJITHR                       USER                                     BY ACCESS  BY ACCESS
+RANJITHR                       VIEW                                     BY ACCESS  BY ACCESS
+SENTHILJ                       ALTER SYSTEM                             BY ACCESS  BY ACCESS
+SENTHILJ                       AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+SENTHILJ                       CLUSTER                                  BY ACCESS  BY ACCESS
+SENTHILJ                       CONTEXT                                  BY ACCESS  BY ACCESS
+SENTHILJ                       CREATE SESSION                           BY ACCESS  BY ACCESS
+SENTHILJ                       DATABASE LINK                            BY ACCESS  BY ACCESS
+SENTHILJ                       DIMENSION                                BY ACCESS  BY ACCESS
+SENTHILJ                       DIRECTORY                                BY ACCESS  BY ACCESS
+SENTHILJ                       INDEX                                    BY ACCESS  BY ACCESS
+SENTHILJ                       MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+SENTHILJ                       MINING MODEL                             BY ACCESS  BY ACCESS
+SENTHILJ                       NOT EXISTS                               BY ACCESS  BY ACCESS
+SENTHILJ                       PROCEDURE                                BY ACCESS  BY ACCESS
+SENTHILJ                       PROFILE                                  BY ACCESS  BY ACCESS
+SENTHILJ                       PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+SENTHILJ                       PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+SENTHILJ                       ROLE                                     BY ACCESS  BY ACCESS
+SENTHILJ                       ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+SENTHILJ                       SEQUENCE                                 BY ACCESS  BY ACCESS
+SENTHILJ                       SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+SENTHILJ                       SYNONYM                                  BY ACCESS  BY ACCESS
+SENTHILJ                       SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+SENTHILJ                       SYSTEM GRANT                             BY ACCESS  BY ACCESS
+SENTHILJ                       TABLE                                    BY ACCESS  BY ACCESS
+SENTHILJ                       TABLESPACE                               BY ACCESS  BY ACCESS
+SENTHILJ                       TRIGGER                                  BY ACCESS  BY ACCESS
+SENTHILJ                       TYPE                                     BY ACCESS  BY ACCESS
+SENTHILJ                       USER                                     BY ACCESS  BY ACCESS
+SENTHILJ                       VIEW                                     BY ACCESS  BY ACCESS
+SHIVA                          ALTER SYSTEM                             BY ACCESS  BY ACCESS
+SHIVA                          AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+SHIVA                          CLUSTER                                  BY ACCESS  BY ACCESS
+SHIVA                          CONTEXT                                  BY ACCESS  BY ACCESS
+SHIVA                          CREATE SESSION                           BY ACCESS  BY ACCESS
+SHIVA                          DATABASE LINK                            BY ACCESS  BY ACCESS
+SHIVA                          DIMENSION                                BY ACCESS  BY ACCESS
+SHIVA                          DIRECTORY                                BY ACCESS  BY ACCESS
+SHIVA                          INDEX                                    BY ACCESS  BY ACCESS
+SHIVA                          MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+SHIVA                          MINING MODEL                             BY ACCESS  BY ACCESS
+SHIVA                          NOT EXISTS                               BY ACCESS  BY ACCESS
+SHIVA                          PROCEDURE                                BY ACCESS  BY ACCESS
+SHIVA                          PROFILE                                  BY ACCESS  BY ACCESS
+SHIVA                          PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+SHIVA                          PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+SHIVA                          ROLE                                     BY ACCESS  BY ACCESS
+SHIVA                          ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+SHIVA                          SEQUENCE                                 BY ACCESS  BY ACCESS
+SHIVA                          SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+SHIVA                          SYNONYM                                  BY ACCESS  BY ACCESS
+SHIVA                          SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+SHIVA                          SYSTEM GRANT                             BY ACCESS  BY ACCESS
+SHIVA                          TABLE                                    BY ACCESS  BY ACCESS
+SHIVA                          TABLESPACE                               BY ACCESS  BY ACCESS
+SHIVA                          TRIGGER                                  BY ACCESS  BY ACCESS
+SHIVA                          TYPE                                     BY ACCESS  BY ACCESS
+SHIVA                          USER                                     BY ACCESS  BY ACCESS
+SHIVA                          VIEW                                     BY ACCESS  BY ACCESS
+SUNILP                         ALTER SYSTEM                             BY ACCESS  BY ACCESS
+SUNILP                         AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+SUNILP                         CLUSTER                                  BY ACCESS  BY ACCESS
+SUNILP                         CONTEXT                                  BY ACCESS  BY ACCESS
+SUNILP                         CREATE SESSION                           BY ACCESS  BY ACCESS
+SUNILP                         DATABASE LINK                            BY ACCESS  BY ACCESS
+SUNILP                         DIMENSION                                BY ACCESS  BY ACCESS
+SUNILP                         DIRECTORY                                BY ACCESS  BY ACCESS
+SUNILP                         INDEX                                    BY ACCESS  BY ACCESS
+SUNILP                         MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+SUNILP                         MINING MODEL                             BY ACCESS  BY ACCESS
+SUNILP                         NOT EXISTS                               BY ACCESS  BY ACCESS
+SUNILP                         PROCEDURE                                BY ACCESS  BY ACCESS
+SUNILP                         PROFILE                                  BY ACCESS  BY ACCESS
+SUNILP                         PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+SUNILP                         PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+SUNILP                         ROLE                                     BY ACCESS  BY ACCESS
+SUNILP                         ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+SUNILP                         SEQUENCE                                 BY ACCESS  BY ACCESS
+SUNILP                         SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+SUNILP                         SYNONYM                                  BY ACCESS  BY ACCESS
+SUNILP                         SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+SUNILP                         SYSTEM GRANT                             BY ACCESS  BY ACCESS
+SUNILP                         TABLE                                    BY ACCESS  BY ACCESS
+SUNILP                         TABLESPACE                               BY ACCESS  BY ACCESS
+SUNILP                         TRIGGER                                  BY ACCESS  BY ACCESS
+SUNILP                         TYPE                                     BY ACCESS  BY ACCESS
+SUNILP                         USER                                     BY ACCESS  BY ACCESS
+SUNILP                         VIEW                                     BY ACCESS  BY ACCESS
+                               ALTER SYSTEM                             BY ACCESS  BY ACCESS
+                               CREATE SESSION                           BY ACCESS  BY ACCESS
+                               NETWORK                                  BY ACCESS  BY ACCESS
+
+380 rows selected.
+
+SQL> l
+  1  select * from dba_stmt_audit_opts
+  2  union
+  3* select * from dba_priv_audit_opts
+
+  
+
+GRANTEE                                  PRIVILEGE                                ADM COM
+---------------------------------------- ---------------------------------------- --- ---
+SYS                                      AUDIT SYSTEM                             NO  YES
+AUDIT_ADMIN                              AUDIT ANY                                NO  YES
+SYSBACKUP                                AUDIT ANY                                NO  YES
+IMP_FULL_DATABASE                        AUDIT SYSTEM                             NO  YES
+DBA                                      AUDIT ANY                                YES YES
+AUDIT_ADMIN                              AUDIT SYSTEM                             NO  YES
+SYS                                      AUDIT ANY                                NO  YES
+IMP_FULL_DATABASE                        AUDIT ANY                                NO  YES
+DATAPUMP_IMP_FULL_DATABASE               AUDIT SYSTEM                             NO  YES
+DATAPUMP_IMP_FULL_DATABASE               AUDIT ANY                                NO  YES
+DBA                                      AUDIT SYSTEM                             YES YES
+
+11 rows selected.
+
+SQL> l
+  1  select *
+  2  from dba_sys_privs
+  3  where privilege like '%AUDIT%'
+
+  
+--
+-- SQL to generate audit actions to be enabled for changes to objects in the
+-- database schema. NOTE:- This is a sample set of commands and not all 
+-- possible ones. Also the spool lines will stop the spool command at the start
+-- of this file. Cut and paste this section into another file to run it.
+--
+
+set head off
+set feed off
+set pages 0
+spool aud.lis
+select 'audit '||name||';'
+from system_privilege_map
+where (name like 'CREATE%TABLE%'
+or name like 'CREATE%INDEX%'
+or name like 'CREATE%CLUSTER%'
+or name like 'CREATE%SEQUENCE%'
+or name like 'CREATE%PROCEDURE%'
+or name like 'CREATE%TRIGGER%'
+or name like 'CREATE%LIBRARY%')
+union
+select 'audit '||name||';'
+from system_privilege_map
+where (name like 'ALTER%TABLE%'
+or name like 'ALTER%INDEX%'
+or name like 'ALTER%CLUSTER%'
+or name like 'ALTER%SEQUENCE%'
+or name like 'ALTER%PROCEDURE%'
+or name like 'ALTER%TRIGGER%'
+or name like 'ALTER%LIBRARY%')
+union
+select 'audit '||name||';'
+from system_privilege_map
+where (name like 'DROP%TABLE%'
+or name like 'DROP%INDEX%'
+or name like 'DROP%CLUSTER%'
+or name like 'DROP%SEQUENCE%'
+or name like 'DROP%PROCEDURE%'
+or name like 'DROP%TRIGGER%'
+or name like 'DROP%LIBRARY%')
+union
+select 'audit '||name||';'
+from system_privilege_map
+where (name like 'EXECUTE%INDEX%'
+or name like 'EXECUTE%PROCEDURE%'
+or name like 'EXECUTE%LIBRARY%')
+/
+spool off
+@@aud.lis
+
+
+SQL> select audit_option,success,failure
+from dba_stmt_audit_opts
+union
+select privilege,success,failure
+from dba_priv_audit_opts
+/  2    3    4    5    6
+
+AUDIT_OPTION                             SUCCESS    FAILURE
+---------------------------------------- ---------- ----------
+ALTER SYSTEM                             BY ACCESS  BY ACCESS
+AUDIT SYSTEM                             BY ACCESS  BY ACCESS
+CLUSTER                                  BY ACCESS  BY ACCESS
+CONTEXT                                  BY ACCESS  BY ACCESS
+CREATE SESSION                           BY ACCESS  BY ACCESS
+DATABASE LINK                            BY ACCESS  BY ACCESS
+DIMENSION                                BY ACCESS  BY ACCESS
+DIRECTORY                                BY ACCESS  BY ACCESS
+INDEX                                    BY ACCESS  BY ACCESS
+MATERIALIZED VIEW                        BY ACCESS  BY ACCESS
+MINING MODEL                             BY ACCESS  BY ACCESS
+NETWORK                                  BY ACCESS  BY ACCESS
+NOT EXISTS                               BY ACCESS  BY ACCESS
+PROCEDURE                                BY ACCESS  BY ACCESS
+PROFILE                                  BY ACCESS  BY ACCESS
+PUBLIC DATABASE LINK                     BY ACCESS  BY ACCESS
+PUBLIC SYNONYM                           BY ACCESS  BY ACCESS
+ROLE                                     BY ACCESS  BY ACCESS
+ROLLBACK SEGMENT                         BY ACCESS  BY ACCESS
+SEQUENCE                                 BY ACCESS  BY ACCESS
+SQL TRANSLATION PROFILE                  BY ACCESS  BY ACCESS
+SYNONYM                                  BY ACCESS  BY ACCESS
+SYSTEM AUDIT                             BY ACCESS  BY ACCESS
+SYSTEM GRANT                             BY ACCESS  BY ACCESS
+TABLE                                    BY ACCESS  BY ACCESS
+TABLESPACE                               BY ACCESS  BY ACCESS
+TRIGGER                                  BY ACCESS  BY ACCESS
+TYPE                                     BY ACCESS  BY ACCESS
+USER                                     BY ACCESS  BY ACCESS
+VIEW                                     BY ACCESS  BY ACCESS
+
+30 rows selected.
+
+--
+-- SQL to print out details of all logon and logoff attempts in the audit trail.
+--
+
+col username for a15
+col terminal for a6
+col timestamp for a15
+col logoff_time for a15
+col action_name for a8
+col returncode for 9999
+select     username,
+   terminal,
+   action_name,
+   to_char(timestamp,'DDMMYYYY:HHMISS') timestamp,
+   to_char(logoff_time,'DDMMYYYY:HHMISS') logoff_time,
+   returncode
+from       dba_audit_session
+/
+
+--
+-- SQL to test for failed logon attempts, grouped per day.
+--
+
+select count(*),username,terminal,to_char(timestamp,'DD-MON-YYYY')
+from dba_audit_session
+where returncode<>0
+group by username,terminal,to_char(timestamp,'DD-MON-YYYY')
+/
+
+
+--
+-- Change to above SQL to show a little more details.
+--
+
+select count(*),username,terminal,to_char(timestamp,'DD-MON-YYYY'),returncode
+from dba_audit_session
+group by username,terminal,to_char(timestamp,'DD-MON-YYYY'),returncode
+/
+
+--
+-- SQL to check for attempts to access the database with non existant users. This could
+-- indicate someone trying to guess user names and passwords.
+--
+
+select username,terminal,to_char(timestamp,'DD-MON-YYYY HH24:MI:SS')
+from dba_audit_session
+where returncode<>0
+and not exists (select 'x'
+   from dba_users
+   where dba_users.username=dba_audit_session.username)
+/
+
+--
+-- Check for access attempts to the database at unusual hours. The two times should
+-- be altered or passed in and if detail is needed for multiple days then group by 
+-- the date as well.
+--
+
+select	username,
+	terminal,
+    	action_name,
+    	returncode,
+    	to_char(timestamp,'DD-MON-YYYY HH24:MI:SS'),
+    	to_char(logoff_time,'DD-MON-YYYY HH24:MI:SS')
+from dba_audit_session
+where to_date(to_char(timestamp,'HH24:MI:SS'),'HH24:MI:SS') < to_date('08:00:00','HH24:MI:SS')
+or to_date(to_char(timestamp,'HH24:MI:SS'),'HH24:MI:SS') > to_date('19:30:00','HH24:MI:SS')
+/
+
+
+--
+-- Check for users sharing database logons.
+--
+
+select count(distinct(terminal)),username
+from dba_audit_session
+having count(distinct(terminal))>1
+group by username
+/
+
+
+--
+-- Check for multiple database accounts being used from one terminal. This could indicate
+-- wrong doing as each terminal should in theory be used by one person and one account?
+--
+
+select count(distinct(username)),terminal
+from dba_audit_session
+having count(distinct(username))>1
+group by terminal
+/
+
+--
+-- Check the audit trail for any changes being made to the structure of the database schema.
+--
+
+col username for a8
+col priv_used for a16
+col obj_name for a22
+col timestamp for a17
+col returncode for 9999
+select  username,
+        priv_used,
+        obj_name,
+        to_char(timestamp,'DD-MON-YYYY HH24:MI') timestamp,
+        returncode
+from dba_audit_trail
+where priv_used is not null
+and priv_used<>'CREATE SESSION'
+/
+

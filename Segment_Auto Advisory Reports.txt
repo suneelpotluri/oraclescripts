@@ -1,0 +1,76 @@
+SELECT f.task_name,f.impact, 
+o.type AS object_type, 
+o.attr1 AS schema, 
+o.attr2 AS object_name, 
+f.message, 
+f.more_info 
+FROM dba_advisor_findings f 
+JOIN dba_advisor_objects o ON f.object_id = o.object_id AND f.task_name = o.task_name 
+WHERE f.task_name like 'SYS_AUTO_SPCADV_%' 
+ ORDER BY f.task_name, f.impact DESC; 
+ 
+ SELECT segment_name,
+ round(allocated_space/1024/1024,1) alloc_mb,
+ round( used_space/1024/1024, 1 ) used_mb,
+ round( reclaimable_space/1024/1024) reclaim_mb,
+ round(reclaimable_space/allocated_space*100,0) pctsave,
+ recommendations ,
+ re.task_id, ta.execution_end
+ FROM TABLE(dbms_space.asa_recommendations()) re, dba_advisor_tasks ta
+ Where ta.task_id=re.task_id and ta.created>=sysdate-7;
+ 
+ 
+ UNDEF ENTER_TABLE_OWNER
+UNDEF ENTER_TABLE_NAME
+COLUMN recommendations format a130 wrap
+COLUMN c3 format a80 wrap heading 'Run Me Frist'
+COLUMN c2 format a80 wrap heading 'Run Me Second'
+COLUMN c1 format a80 wrap heading 'Run Me Last |(May not be required)'
+SET lines 132 pages 66 echo off feedback off verify off
+TTITLE left _date center 'Report of Table Rebuild Candidates' skip 2
+SELECT segment_owner, segment_name, segment_type, partition_name,
+       recommendations, c3 || ';' c3, c2 || ';' c2, c1 || ';' c1
+  FROM TABLE (DBMS_SPACE.asa_recommendations ('FALSE', 'FALSE', 'FALSE'))
+ WHERE segment_type = 'TABLE'
+   AND segment_owner = UPPER ('&ENTER_TABLE_OWNER');
+ --  AND segment_name = UPPER ('&&ENTER_TABLE_NAME');
+
+ SELECT 
+                   'Segment Advice --------------------------'|| chr(10) || 
+                   'TABLESPACE_NAME           : ' || tablespace_name              || chr(10) || 
+                   'SEGMENT_OWNER             : ' || segment_owner                || chr(10) || 
+                   'SEGMENT_NAME              : ' || segment_name                 || chr(10) || 
+                   'ALLOCATED_SPACE           : ' || allocated_space              || chr(10) || 
+                   'RECLAIMABLE_SPACE: ' || reclaimable_space || chr(10) || 
+                   'RECOMMENDATIONS           : ' || recommendations              || chr(10) || 
+                   'SOLUTION 1                : ' || c1                           || chr(10) || 
+                   'SOLUTION 2                : ' || c2                           || chr(10) || 
+                   'SOLUTION 3                : ' || c3 Advice
+FROM
+                   TABLE(dbms_space.asa_recommendations('FALSE', 'FALSE', 'FALSE')); 
+ 
+ 
+ SELECT
+  'Task Name        : ' || f.task_name  || chr(10) || 
+ 'Start Run Time   : ' || TO_CHAR(execution_start, 'dd-mon-yy hh24:mi') || chr (10) || 
+ 'Segment Name     : ' || o.attr2    || chr(10) || 
+ 'Segment Type     : ' || o.type       || chr(10) || 
+ 'Partition Name   : ' || o.attr3      || chr(10) || 
+ 'Message          : ' || f.message    || chr(10) || 
+ 'More Info        : ' || f.more_info  || chr(10) || 
+ '------------------------------------------------------' Advice 
+FROM 
+ dba_advisor_findings   f 
+    ,dba_advisor_objects    o 
+    ,dba_advisor_executions e 
+WHERE o.task_id   = f.task_id 
+AND   o.object_id = f.object_id 
+AND   f.task_id   = e.task_id 
+AND   e. execution_start > sysdate - 1 
+AND   e.advisor_name = 'Segment Advisor' 
+ORDER BY f.task_name; 
+
+
+
+
+SELECT * FROM TABLE(dbms_space.object_growth_trend('POSPRD','DBOD,'TABLE')) ORDER BY timepoint;

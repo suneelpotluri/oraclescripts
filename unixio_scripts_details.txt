@@ -1,0 +1,170 @@
+https://bartsjerps.wordpress.com/2011/03/04/io-bottleneck-linux/
+
+#!/bin/bash
+ if (( $(id -u) != 0 )); then
+ echo “Please run as root”
+exit 1
+ fi
+ cd /dev
+ sedstring=$(sginfo -l |awk -F’ ‘ ‘$0 ~ “scsi” {print $2″ “$3” “$5}’ | sed “s/scsi//” | sed “s/id=//” | sed “s/\[=//” | sort -n -k 2,3 |\
+ while read dev scsi lun
+ do
+ if [ -b ${dev}1 ]; then
+ maj=$(ls -l ${dev}1 | tr ‘,’ ‘ ‘ | awk ‘{print $5}’)
+min=$(ls -l ${dev}1 | tr ‘,’ ‘ ‘ | awk ‘{print $6}’)
+vol=$(ls -l /dev/oracleasm/disks | tr ‘,’ ‘ ‘ | awk -v maj=$maj -v min=$min ‘$5 == maj && $6 == min {print $10}’)
+ [[ “$vol” != “” ]] && printf “s/${dev##*/}1/$vol/;”
+fi
+ done )
+ iostat -xk sd[c-z]1 2 | sed $sedstring
+
+ Now the other question. The app administrator wants to know how much iops a certain LUN can provide. There is no straightforward answer to that question, many things influence the iops capabilities of the LUN.
+ To name a few:
+
+– read/write ratio
+– how much (true) random io vs. random-ish io vs sequential (and this relates to the real physical disk level, not just what the application is doing – some volume managers, file systems and storage architectures mess up sequential IO and convert it into random – ouch!)
+– blocksize / io size
+– skewing
+– Disk type (SATA, FC, SAS, SSD/EFD) and disk characteristics
+– IOPS density (how many iops are served per gigabyte)
+– how many physical disks make up the LUN (i.e. the RAID, striping, metavolume, and virtual provisioning configuration)
+– How busy are all resources involved with that LUN with doing other stuff (i.e. serving other LUNs or even other applications – resulting in queueing and higher % busy of resources)
+– How well does storage caching and pre-fetching work (i.e. do all I/O’s need to come from physical disk or can we provide the majority somehow from cache)
+
+I plan to write some blog posts more on these topics. But for now your question is still unanswered… :)
+
+And I get that question from many of my customers, too. So what to answer? I can only give an answer based on assumptions and without guarantees. But here is my direction:
+
+– Don’t provide the iops for a single LUN but for a set of LUNs that serve the database
+– Assume no other IO load is using any shared components or other LUNs
+– Figure out how much disks of what type make up the LUN
+– Assume an IO workload type (i.e. r/w ratio, block size, skewing, etc)
+– Calculate how much random IOPS the disk backend can serve (included overhead for RAID etc)
+– Assume the expected storage cache hit ratio (i.e. for Oracle on EMC you will find this probably higher than expected ;)
+– Calculate the max iops for that workload
+
+Quick (incomplete) example:
+
+FC disks, 10K rpm, can do 120 random iops (but size for 85 to avoid high latency)
+ So 20 disks can do 2400 random iops but calculate with 1700
+ In RAID-5 3+1 random writes cause 2 disk writes (sometimes 4, sometimes 1.33)
+ So if the workload is 80/20 read/write, then there is some RAID penalty.
+
+Assume for reads you will have 70% storage cache hit. Writes all go through cache, and have to be written to disk later (few exceptions) but redo writes (about half the write IO of a database) are sequential.
+ So 1000 db iops will cause 800 reads and 200 writes, of those 800, 560 will be cached and of the writes, 100 are sequential and hardly generating random seeks. So the effective IO load of 1000 db iops is 240 (r) + 100 (w)
+ This equals out to 240 random reads on disk and 200 random writes (because of RAID penalty). Total 440. So the host IO/disk IO ratio is 1000/440 = 2.3 (rounded)
+
+Meaning the 20 FC disks can do 1700 * 2.3 = about 3900 iops.
+
+Note that I am cutting some corners here and depending on the type of app your mileage may vary. A datawarehouse with huge full table scans will generate large sequential IO’s so you will see less than 3900 (but at a high throughput). An order entry system where most of the transactions are in the recently created table rows (therefore good cacheing in storage) will probably do more than 3900. And so on. Also DB settings can cause differences. Consider redo log duplexing for example, or archivelog mode on or off. Or changing block sizes.
+ But you have to start somewhere.
+
+Hope this helps…
+
+ 
+
+iostat -xk 2 /dev/sd[bc]
+
+
+If you look at the upper half of the picture you can see activity on the Fibre Channel disks (LUNs) FC_1 through FC_5 (this is what made up the Oracle ASM diskgroup for this database). The system was IO bound (you can see almost 74% IO wait). Now look at the columns “avgqu-sz” (Average queue size), “await” (average wait in the queue) and “svctm” (service time).
+
+In the lower half you can see what happened after moving the database to Enterprise Flash disks, but more on this in a future post :-)
+
+Service time (storage wait) is the time it takes to actually send the I/O request to the storage and get an answer back – this is the time the storage system (EMC in this case) needs to handle the I/O. It varies between 3.8 and 7 ms on average.
+
+Average Wait (host wait) is the time the I/O’s wait in the host I/O queue.
+
+Average Queue Size is the average amount of I/O’s waiting in the queue.
+
+A very simple example: Assume a storage system handles each I/O in exactly 10 milliseconds and there are always 10 I/O’s in the host queue. Then the Average Wait will be 10 x 10 = 100 milliseconds.
+
+
+================== I/O Details =========
+https://blogs.oracle.com/alejandrovargas/useful-scripts
+set pages 9999
+spool sysmetric_outp.log
+alter session set nls_date_format='dd-mm-yyyy hh24:mi';
+select min(begin_time), max(end_time),
+       sum(case metric_name when 'Physical Read Total Bytes Per Sec' then average end) Physical_Read_Total_Bps,
+       sum(case metric_name when 'Physical Write Total Bytes Per Sec' then average end) Physical_Write_Total_Bps,
+       sum(case metric_name when 'Redo Generated Per Sec' then average end) Redo_Bytes_per_sec,
+       sum(case metric_name when 'Physical Read Total IO Requests Per Sec' then average end) Physical_Read_IOPS,
+       sum(case metric_name when 'Physical Write Total IO Requests Per Sec' then average end) Physical_write_IOPS,
+       sum(case metric_name when 'Redo Writes Per Sec' then average end) Physical_redo_IOPS,
+       sum(case metric_name when 'Current OS Load' then average end) OS_LOad,
+       sum(case metric_name when 'CPU Usage Per Sec' then average end) DB_CPU_Usage_per_sec, 
+       sum(case metric_name when 'Host CPU Utilization (%)' then average end) Host_CPU_util, 
+       sum(case metric_name when 'Network Traffic Volume Per Sec' then average end) Network_bytes_per_sec, 
+       snap_id
+from dba_hist_sysmetric_summary
+group by snap_id
+order by snap_id;
+spool off 
+
+
+SELECT a.sid,
+ a.statistic#,
+ SUBSTR(b.name,1,40) name,
+ a.value
+ FROM v$sesstat a,
+ v$statname b,
+ v$session se
+ WHERE se.audsid = (select userenv('sessionid') from dual)
+ AND a.statistic# = b.statistic#
+ AND se.sid = a.sid
+ AND b.name in ('physical read total IO requests','physical read total bytes','physical write total IO requests','physical write total bytes')
+ ORDER BY b.class, b.name;
+ 
+ 
+ These scripts are very useful to check throughput.
+
+The original version can be found on My Oracle Support Note 422414.1 by Luca Canali.
+
+set lines 250 pages 50000
+alter session set nls_date_format='dd-mm-yyyy hh24:mi';
+col Phys_Read_Total_Bps for 999999999999
+col Phys_Write_Total_Bps for 999999999999
+col Redo_Bytes_per_sec for 999999999999
+col Phys_Read_IOPS for 999999999999
+col Phys_write_IOPS for 999999999999
+col Phys_redo_IOPS for 999999999999
+col OS_LOad for 999999999999
+col DB_CPU_Usage_per_sec for 999999999999
+col Host_CPU_util for 999999999999
+col Network_bytes_per_sec for 999999999999
+col Phys_IO_Tot_MBps for 999999999999
+col Phys_IOPS_Tot for 999999999999
+spool io_max_checkup.log
+select min(begin_time), max(end_time),
+ sum(case metric_name when 'Physical Read Total Bytes Per Sec' then maxval end) Phys_Read_Tot_Bps,
+ sum(case metric_name when 'Physical Write Total Bytes Per Sec' then maxval end) Phys_Write_Tot_Bps,
+ sum(case metric_name when 'Redo Generated Per Sec' then maxval end) Redo_Bytes_per_sec,
+ sum(case metric_name when 'Physical Read Total IO Requests Per Sec' then maxval end) Phys_Read_IOPS,
+ sum(case metric_name when 'Physical Write Total IO Requests Per Sec' then maxval end) Phys_write_IOPS,
+ sum(case metric_name when 'Redo Writes Per Sec' then maxval end) Phys_redo_IOPS,
+ sum(case metric_name when 'Current OS Load' then maxval end) OS_LOad,
+ sum(case metric_name when 'CPU Usage Per Sec' then maxval end) DB_CPU_Usage_per_sec,
+ sum(case metric_name when 'Host CPU Utilization (%)' then maxval end) Host_CPU_util, --NOTE 100% = 1 loaded RAC node
+ sum(case metric_name when 'Network Traffic Volume Per Sec' then maxval end) Network_bytes_per_sec,
+ snap_id
+from dba_hist_sysmetric_summary
+group by snap_id
+order by snap_id;
+spool off
+spool io_maxtot_summary.log
+select min(begin_time), max(end_time),
+ sum(case metric_name when 'Physical Read Total Bytes Per Sec' then maxval end)/1024/1024 +
+ sum(case metric_name when 'Physical Write Total Bytes Per Sec' then maxval end)/1024/1024 +
+ sum(case metric_name when 'Redo Generated Per Sec' then maxval end)/1024/1024 Phys_IO_Tot_MBps,
+ sum(case metric_name when 'Physical Read Total IO Requests Per Sec' then maxval end) +
+ sum(case metric_name when 'Physical Write Total IO Requests Per Sec' then maxval end) +
+ sum(case metric_name when 'Redo Writes Per Sec' then maxval end) Phys_IOPS_Tot,
+ sum(case metric_name when 'Current OS Load' then maxval end) OS_LOad,
+ sum(case metric_name when 'CPU Usage Per Sec' then maxval end) DB_CPU_Usage_per_sec,
+ sum(case metric_name when 'Host CPU Utilization (%)' then maxval end) Host_CPU_util, --NOTE 100% = 1 loaded RAC node
+ sum(case metric_name when 'Network Traffic Volume Per Sec' then maxval end) Network_bytes_per_sec,
+ snap_id
+from dba_hist_sysmetric_summary
+group by snap_id
+order by snap_id;
+spool off

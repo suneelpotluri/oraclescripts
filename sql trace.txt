@@ -1,0 +1,31 @@
+(12:07 PM UTC+05:00) Deeptiman: 1 need 10046 trace for the SQL 
+ (12:07 PM UTC+05:00) Deeptiman: I* 
+ (12:07 PM UTC+05:00) Harinder Saini: hi 
+ (12:08 PM UTC+05:00) Deeptiman: Enable 
+ (12:08 PM UTC+05:00) Deeptiman: alter system set events 'sql_trace [sql: sql_id=0k8522rmdzg4k | sql_id=cm5vu20fhtnq1] level 12'; 
+
+ (12:08 PM UTC+05:00) Deeptiman: Disable 
+ (12:08 PM UTC+05:00) Deeptiman: alter system set events 'sql_trace [sql: sql_id=0k8522rmdzg4k | sql_id=cm5vu20fhtnq1] off'; 
+
+ (12:09 PM UTC+05:00) Deeptiman: alter system set events 'sql_trace [sql: sql_id=fg5sf3zb40s3p] level 12'; 
+ (12:09 PM UTC+05:00) Deeptiman: alter system set events 'sql_trace [sql: sql_id=fg5sf3zb40s3p] off; 
+ (12:10 PM UTC+05:00) Deeptiman: -- Conn as SYSDBA and execute the below command : 
+ SELECT P.PID,P.SPID,S.SID FROM V$PROCESS P,V$SESSION S WHERE S.PADDR = P.ADDR AND S.AUDSID = USERENV('SESSIONID') 
+
+ (12:10 PM UTC+05:00) Deeptiman: SQL> connect / as sysdba 
+ SQL> oradebug setospid <OSPID> ==>Please change the spid captured in the Session1 
+ SQL> oradebug unlimit 
+ SQL> oradebug dump errorstack 3 
+ SQL> wait for 1 minute 
+ SQL> oradebug dump errorstack 3 
+ SQL> wait for 1 minute 
+ SQL> oradebug dump errorstack 3 
+ SQL> oradebug tracefile_name==>This is the generated trace file name 
+
+ (12:10 PM UTC+05:00) Deeptiman: Provide a 1 hour AWR as well as ASH for last 15 minutes 
+ (12:12 PM UTC+05:00) Deeptiman: Provide these information to analyze further 
+ (12:13 PM UTC+05:00) Deeptiman: So no changes in DB , no changes in data , it ran good before but now its running forever 
+ (12:13 PM UTC+05:00) Harinder Saini: yes 
+ (12:15 PM UTC+05:00) Deeptiman: Provide the SQLT XTRACT once generated 
+ (12:16 PM UTC+05:00) Deeptiman: Once all the information is available we `ll check and let you know 
+ (12:16 PM UTC+05:00) Deeptiman: thanks 
