@@ -1,0 +1,66 @@
+Password for CDC  user in bilprodb3 is "Passwd!1
+Passwd!1
+Sunil Potluri [10:29 PM]:
+pwx_bscs
+is user
+
+
+Please find the steps to be followed to stop and start CDC in BSCS database.
+
+CDC Credentails:
+
+Username: pwx_bscs
+Password: Shared separately.
+
+Steps to stop the CDC:
+
+Important Point: All the running workflows to be stopped. 
+
+Identify the process by below commands. Once the process are identified kill the process by using the below.
+
+ps -ef|grep dtllst
+
+ps -ef|grep pwxccl
+
+
+
+Start the CDC: The below sequence to be followed .
+
+cd $PWX_HOME
+nohup dtllst node1 > dtllst_30_03_2018.log & 
+nohup pwxccl cs=/pwx_bin_bscs/Informatica/PowerExchange9.5.1/pwxccl_BSCSPR.cfg > pwxccl_30_03_2018.log &
+
+Note : It will take more than 30 minutes to update the log. So there is nothing to worry. Monitor for 5 to 10 minutes if the log does not report any error then ask DWH team to start the workflows.
+
+
+
+
+How to  check and confirm that restart checkpoints has been aligned ?
+
+1.       Check if there is any opened/pending transactions (e.g. v$transaction)
+2.       Close those transactions either by Rollback or commit actions.
+3.       CDC will detect those closure /clearance actions and will align its restart checkpoints accordingly.
+4.       Stop (normally) CDC processes
+5.       Stop the DB
+
+
+Kindly, PWX Express CDC starts reading REDO/Archive logs beginning at that oldest begin-tran for which it has not seen a final commit or rollback (from the Restart Token value).
+This is not a bug, nor a failure. This is how PWX guarantees that no data is missed.
+
+So to guarantee a safe warm start you need to do the following:
+•         Check if there is any opened/pending transactions (e.g. v$transaction).
+•         Close those transactions either by Rollback or commit actions.
+•         After stopping the transaction at source database please allow sometime and let the logger reach the tip of the log and see for the logger (“PWX_Home/…….etc” , path to log file name)  log message like below “Reading at the tip of online log”, This will update the latest checkpoint and you can warm start the logger.
+
+
+Kindly find our below inline comments
+-	Is there is any maximum time after which PWX should show message “Reading at the tip of online log”  .  
+o	It should not take long time, we suggest to wait for few minutes (e.g 10 to 15 min) before proceeding to the next action
+
+-	If message doesn’t show, anything manual can be done to force PWX to read redo logs quickly.
+o	No, there is nothing to do . 
+
+-	If still it doesn’t work then DBA will have no choice but proceed with CDC stop and check for any errors at re-start times. Please confirm.
+o	Yes, in such case we  will proceed and handle any errors we might get later while re-starting the job (if there is any). 
+
+

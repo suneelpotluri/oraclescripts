@@ -1,0 +1,30 @@
+V$sql_shared_cursor
+
+to check the version count of particular sql.
+
+
+select sql_id,version_count,EXECUTIONS,BUFFER_GETS,DISK_READS  from v$sqlarea where sql_id='0f84pb84gsu5p';
+
+
+select SID,USERNAME,SQL_ID,LAST_CALL_ET from v$session where username is not null and status='ACTIVE' order by LAST_CALL_ET;
+
+ select sql_id,version_count,EXECUTIONS,BUFFER_GETS,DISK_READS,hash_value from v$sqlarea where sql_id='3v9zw42faw9fr'
+
+
+
+select SQL_ID,PLAN_HASH_VALUE,VERSION_COUNT,EXECUTIONS_TOTAL,DISK_READS_TOTAL,ELAPSED_TIME_TOTAL, ELAPSED_TIME_TOTAL/EXECUTIONS_TOTAL "elapsed_time_per_execution" from dba_hist_sqlstat where sql_id='2q1y7hghnc5nx' and PLAN_HASH_VALUE=3779466909;
+
+
+
+select SQL_ID,PLAN_HASH_VALUE,VERSION_COUNT,EXECUTIONS_TOTAL,DISK_READS_TOTAL,ELAPSED_TIME_TOTAL,ELAPSED_TIME_TOTAL/EXECUTIONS_TOTAL "elapsed_time_per_execution" from dba_hist_sqlstat where sql_id='3v9zw42faw9fr' and PLAN_HASH_VALUE=1007871564
+
+ select EVENT,P1,WAIT_TIME,SECONDS_IN_WAIT,STATE,p2 from v$session where sid=3432;
+
+
+Select  * from v$pgastat;
+
+
+SQL> SELECT p1 "file#", p2 "block#", p3 "class#"
+ FROM v$session_wait
+ WHERE event = 'direct path read temp';  2    3
+

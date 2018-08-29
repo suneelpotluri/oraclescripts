@@ -1,0 +1,2380 @@
+
+
+Customer Escalation Contact 
+------------------------------------------------------ 
+Kashifuddin Syed Mohammed 
+
+Contact Phone 
+-------------------------- 
+0526849216 
+
+Handling Instructions 
+------------------------------------------ 
+Critical 
+
+Manager Callback Requested? (Yes/No) 
+------------------------------------------------------------------------ 
+Yes
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+Please follow up in the new SR. SR 3-15318784820. For the current SR, please let me know if further assistance is needed, or if it would be appropriate to inactivate it. 
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+I have created another SR 3-15318784820 for your apply lag issue.Now I am working on that and will update shortly. 
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+I called and confirmed the issue status .Now present issue was resolved after rebuilding the capture. 
+Now customer getting different issue and they told me to create another SR for that. 
+Now I am creating another SR . 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+
+I received your SR as the previous engineer was not available. I'm reviewing your issue now and will update this SR shortly. 
+
+Thanks, 
+Iranna 
+Global Customer Services 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 – 10:00 GMT / 18:30 – 03:00 PDT / 21:30 – 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+SUNIL.POTLURI@DU.AE	- Wednesday		[Update from Customer]
+
+
+Upload to TDS successful for the file streamshc_12Jul.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+SUNIL.POTLURI@DU.AE	- Wednesday		[Update from Customer]
+
+
+
+Latency Applied 
+Apply Process In Message Message 
+Name Seconds Creation Apply Time Number 
+-------------------- ------- ----------------- ----------------- --------------- 
+ACTEVENT_APPLY 4295 10:27:38 07/12/17 11:39:13 07/12/17 11037137338108 
+PAYMENTEVENT_APPLY 4115 10:30:36 07/12/17 11:39:11 07/12/17 11037138683927 
+
+
+Capture Latency 
+Process in Event Creation Message 
+Name Seconds Time Enqueue Time Number 
+------------------------------ --------------- -------------------- -------------------- --------------- 
+ACTEVENT_CAPTURE 4290 10:27:43 07/12/17 11:39:13 07/12/17 11037137343131 
+PAYMENTEVENT_CAPTURE 4114 10:30:38 07/12/17 11:39:12 07/12/17 11037138687589 
+
+
+ 	 	 
+ 	
+ 
+ 
+SUNIL.POTLURI@DU.AE	- Wednesday		[Update from Customer]
+
+
+Hi, 
+
+We have recreated capture process for the existing issue. Post that we are observing a delay in apply capture process. 
+
+Attached is the health check for streams for further investigation. 
+
+Regards,
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+From the output of the queries, archive /bscsarchive01/oradata/BSCSPR/BSCSPR_0001_0000169372_778124593.arc has a dictionary_begin and a dictionary_end. 
+
+How did you execute the dictionary build for SCN 11036401170865? Please provide the complete syntax of the procedure used 
+
+Did the dictionary build complete without any errors? 
+
+Please run the query again as follows: 
+
+select name, dictionary_begin, dictionary_end first_scn, next_scn from v$archived_log where 11036401170865 between first_change# and next_change#; 
+
+In the last health check reportt from this morning the last archive log registered with the capture PAYMENTEVENT_CAPTURE corresponds to sequence 169368. 
+
+Please make sure that alll archives starting form sequence 169371 are registered with the capture processes. 
+
+Please generate a new health check report and upload it to the SR as requested in the previous action plans. That way we can verify if the archives are registered or not. 
+
+Regards, 
+Luis 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+NAME DIC DIC 
+-------------------------------------------------------------------------------- --- --- 
+/bscsarchive01/oradata/BSCSPR/BSCSPR_0001_0000169372_778124593.arc YES YES 
+/bscsarchive01/oradata/BSCSPR/BSCSPR_0001_0000169371_778124593.arc NO NO 
+
+
+CAPTURE_NAME STATUS FIRST_SCN START_SCN 
+------------------------------ -------- ---------------------- ------------------- 
+PAYMENTEVENT_CAPTURE ABORTED 11036401170865 11036401170865 
+ACTEVENT_CAPTURE ABORTED 11036401170865 11036401170865 
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+DATA COLLECTED 
+================ 
+
+Trace File 
+------------- 
+
+/oracle/bscs/admin/BSCSPR/bdump/bscspr_c001_3813.trc 
+Oracle Database 10g Enterprise Edition Release 10.2.0.5.0 - 64bit Production 
+With the Partitioning, OLAP, Data Mining and Real Application Testing options 
+ORACLE_HOME = /oracle/bscs/product/10.2.0 
+System name:	SunOS 
+Node name:	bilprodb4 
+Release:	5.10 
+Version:	Generic_150400-17 
+Machine:	sun4u 
+Instance name: BSCSPR 
+Redo thread mounted by this instance: 1 
+Oracle process number: 2137 
+Unix process pid: 3813, image: oracle@bilprodb4 (C001) 
+... 
++++ Begin DBA_CAPTURE dump for: ACTEVENT_CAPTURE 
+Capture_Type: LOCAL 
+Version: 
+Source_Database: BSCSPR 
+Use_Database_Link: NO 
+Logminer_Id: 1420 Logfile_Assignment: IMPLICIT 
+Status: ENABLED 
+First_Scn: 0x0a09.9cc579b1 [11036401170865] 
+Start_Scn: 0x0a09.9cc579b1 [11036401170865] 
+Captured_Scn: 0x0a09.9cc579b1 [11036401170865] 
+Applied_Scn: 0x0a09.9cc579b1 [11036401170865] 
+Last_Enqueued_Scn: 0x0000.00000000 [0] 
+Capture_User: SYS 
+Queue: EMCDU.INT$ACTEVENT_Q 
+Rule_Set_Name[+]: "EMCDU"."ACTEVENT_CAPTURE_RULES" 
+Checkpoint_Retention_Time: .2 
++++ End DBA_CAPTURE dump 
++++ Begin DBA_CAPTURE_PARAMETERS dump for: ACTEVENT_CAPTURE 
+PARALLELISM = 1 Set_by_User: NO 
+STARTUP_SECONDS = 0 Set_by_User: NO 
+TRACE_LEVEL = 0 Set_by_User: NO 
+TIME_LIMIT = -1 Set_by_User: NO 
+MESSAGE_LIMIT = -1 Set_by_User: NO 
+_CHECKPOINT_FREQUENCY = 200 Set_by_User: YES 
+_SGA_SIZE = 50 Set_by_User: YES 
+MAXIMUM_SCN = 0xffff.ffffffff [281474976710655] Set_by_User: NO 
+WRITE_ALERT_LOG = TRUE Set_by_User: NO 
+DISABLE_ON_LIMIT = FALSE Set_by_User: NO 
+DOWNSTREAM_REAL_TIME_MINE = TRUE Set_by_User: NO 
++++ End DBA_CAPTURE_PARAMETERS dump 
++++ Begin DBA_CAPTURE_EXTRA_ATTRIBUTES dump for: ACTEVENT_CAPTURE 
++++ End DBA_CAPTURE_EXTRA_ATTRIBUTES dump 
+++ LogMiner Session Dump Begin:: 
+SessionId: 1420 SessionName: ACTEVENT_CAPTURE 
+Start SCN: 0x0000.00000000 [0] 
+End SCN: 0x0000.00000000 [0] 
+Processed SCN: 0x0000.00000000 [0] 
+Prepared SCN: 0x0a09.9cc579c6 [11036401170886] 
+Read SCN: 0x0000.00000000 [0] 
+Spill SCN: 0x0000.00000000 [0] 
+Resume SCN: 0x0000.00000000 [0] 
+Branch SCN: 0x0000.00000000 [0] 
+Branch Time: 01/01/1988 00:00:00 
+ResetLog SCN: 0x098c.b65e5602 [10499959707138] 
+ResetLog Time: 03/17/2012 01:43:13 
+DB ID: -1576372606 Global DB Name: BSCSPR 
+krvxvtm: Enabled threads: 1 
+Current Thread Id: 1, Thread State 0x01 
+Current Log Seqn: 0, Current Thrd Scn: 0x0000.00000000 [0] 
+Current Session State: 0x80, Current LM Compat: 0xa200400 
+Flags: 0x3fa002d0, Real Time Apply is On 
++++ Additional Capture Information: 
+Capture Flags: 5 
+Logminer Start SCN: 0x0a09.9cc579b1 [11036401170865] 
+Enqueue Filter SCN: 0x0a09.9cc579b1 [11036401170865] 
+Low SCN: 0x0000.00000000 [0] 
+Capture From Date: 01/01/1988 00:00:00 
+Capture To Date: 01/01/1988 00:00:00 
+Restart Capture Flag: NO 
+Ping Pending: NO 
+Buffered Txn Count: 0 
+-- Xid Hash entry -- 
+-- LOB Hash entry -- 
+-- No TRIM LCR -- 
+Unsupported Reason: 14 
+--- LCR Dump not possible --- 
+End knlcDumpCapCtx:********************************************* 
+*** 2017-07-12 03:29:31.811 
+error 1371 in STREAMS process 
+ORA-01371: Complete LogMiner dictionary not found 
+OPIRIP: Uncaught error 447. Error stack: 
+ORA-00447: fatal error in background process 
+ORA-01371: Complete LogMiner dictionary not found 
+
+ANALYSIS 
+--------------- 
+
+FIRST SCN: 0x0a09.9cc579b1 [11036401170865] 
+SATRT SCN: 0x0a09.9cc579b1 [11036401170865] 
+
+
+ACTION PLAN 
+============= 
+
+Please provide the output from the following queries: 
+
+select name, dictionary_begin, dictionary_end from v$archived_log where 11036401170865 between first_change# and next_change#; 
+
+select capture_name, status, first_scn, start_scn from dba_capture; 
+
+Please generate a new health check report of the capture database an upload into the SR as requested in the previous action plan. 
+
+Regards, 
+Luis 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+Please update.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call Back - Customer]
+
+
+Call Back Customer 
+------------------------------------ 
+Customer contact name : Kashifuddin Syed Mohammed 
+
+Phone#: +971 526849216 
+
+Reason for Call Back? There is an outrage in the system, please call user back asap. 
+
+Action Taken? (completed after customer contact) 
+Contacting support team right away. 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+Uploaded the alert log & Traces for analysis.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+Upload to TDS successful for the file Alert_traces.zip.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+Hi, 
+
+My contact number is changed. You can reach me on+971526849216
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call - Inbound]
+
+
+Call - Inbound 
+---------------------------- 
+Customer contact name: Kashifuddin Syed Mohammed 
+Verify preferred method of contact: My Oracle Support customer portal 
+
+Phone#: ?0557141566 
+Email: syed.kashifuddin@du.ae 
+
+Comments for this update: Customer Syed called requesting for an urgent update via MOS. Currently performing during a downtime, assistanced needed asap. 
+
+ACTION PLAN 
+-------------------- 
+
+Thank you. 
+Joshua Miller 
+Oracle Global Customer Support 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Wednesday		[Update from Customer]
+
+
+Hi , 
+
+We recreated the capture process using the last build but its getting aborted using the below error. 
+
+<krvrd.c:krvrdfdm>: Timed out in NO_MORE_TX 
+Wed Jul 12 03:19:04 GST 2017 
+Streams CAPTURE C001 with pid=245, OS id=6076 stopped 
+Wed Jul 12 03:19:04 GST 2017 
+Errors in file /oracle/bscs/admin/BSCSPR/bdump/bscspr_c001_6076.trc: 
+ORA-01371: Complete LogMiner dictionary not found 
+Wed Jul 12 03:19:06 GST 2017 
+Streams CAPTURE C002 with pid=1554, OS id=6159 stopped 
+Wed Jul 12 03:19:06 GST 2017 
+Errors in file /oracle/bscs/admin/BSCSPR/bdump/bscspr_c002_6159.trc: 
+ORA-01371: Complete LogMiner dictionary not found 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Syed, 
+
+Can you please provide me the latest Streams Health-Check report in HTML format for review by following the below DOC ID : 
+
+Streams Configuration Report and Health Check Script [ Doc ID 273674.1 ] 
+
+And also upload the Alert-log file from 1st July 2017 onwards. 
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Syed, 
+
+I just got reassigned/assigned this SR. I am currently reviewing/researching the issue and will update the SR / call you as soon as we have relevant information. 
+
+Thanks, 
+Hemanth Kumar 
+Global Customer Services 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+Upload to TDS successful for the file rebuild_capture_v1.txt.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+Hi , 
+
+We used the attached the SQL to recreate the capture but when the capture is processing its not starting from the build SCN but instaed going back to the old SCN. Could you help us to solve this. 
+
+SQL> / 
+
+CAPTURE_NAME STATE LATENCY_SECONDS CREATE_TIME ENQUEUE_TIME ENQUEUE_MESSAGE_NUMBER 
+-------------------- ------------------------------------------------------------ --------------- -------------------- -------------------- ---------------------- 
+PAYMENTEVENT_CAPTURE WAITING FOR DICTIONARY REDO: SCN 11036401170865 0 
+ACTEVENT_CAPTURE WAITING FOR DICTIONARY REDO: SCN 11036401170865 0 
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Customer Severity 1 Details 
+--------------------------------------------------- 
+Work 24x7 option has been selected - Work hours for this Service Request are 24x7. 
+
+Severity 1 Contact Information 
+--------------------------------------------------- 
+** Customer's Management contact name: KashifuddinSyed Mohammed 
+** Customer's Management contact number: +971526849216 
+** Customer's Management E-mail Address: syed.kashifuddin1@du.ae 
+
+** Primary Customer contact name: Kashifuddin Syed Mohammed 
+** Primary Customer contact number: 0526849216 
+** Primary Customer E-mail Address: syed.kashifuddin@du.ae 
+** Primary Customer Contact Method: Email 
+
+** Secondary Customer contact name: Kashifuddin Syed Mohammed 
+** Secondary Customer contact number: +971528621872 
+** Alternate Contact Number: +971526849216 
+** Secondary Customer E-mail Address: syed.kashifuddin@du.ae 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+
+
+As per our conversion please restore required archives file and register the archives. 
+
+Please refer below example: 
+
+Example: 
+
+--DESTINATION DB 
+
+SQL> select capture_name, state from v$streams_capture; 
+
+--SOURCE DB 
+
+SQL> SELECT 
+name, dest_id, sequence#, first_change#, next_change#, completion_time 
+FROM V$ARCHIVED_LOG where 7523421102323 between first_change# and next_change# 
+
+
+--DESTINATION DB 
+
+SQL> alter database register logical logfile '/oracle/admin/ODSD/archive/1_21759_657122256.dbf' for 'CAPTURE_TABLE_GRP1'; 
+
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called 0526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+I called the customer and explained about the issue .Now they are working on provided action plan 3. 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Customer is a TELCO. This issue has impacted their billing system. Issue critical. Customer requesting an expert to get engaged and work closely to expedite resolution.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Escalation Update]
+
+
+Escalation Update Activity Update -> Escalation Action Plan:: 
+Tried to reach customers phone but its not going thru. On shift engineer is working on it. will share the next action plan asap
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+Hi Irrany, 
+
+We are not able to recreate the streams as it was asking to delete the transaction and delete for that transacation is taking lot of time. Please find the SR. 
+
+SR 3-13533863211 : NA:DBMS_APPLY_ADM.DELETE_ERROR taking long time 
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Manager Request]
+
+
+Name of person calling : Syed 
+
+Who needs to be contacted : Kashifuddin Syed Mohammed 
+
+Phone# : +971 0526849216 
+
+Reason for Manager Request? Business critical issue, manager's attention required 
+
+Call Back Required: Yes 
+
+
+
+
+**** This information to be documented by Manager **** 
+
+Contact/Communication details (documented by Manager): 
+
+Agreed upon action plan and expectations (documented by Manager): 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+Call - Inbound 
+---------------------------- 
+Customer contact name: Kashifuddin Syed Mohammed 
+Verify preferred method of contact: PHONE 
+
+Phone#: +971 0557141566 
+Email: syed.kashifuddin@du.ae 
+
+Comments for this update: escalation with a manager's callback requested 
+
+ACTION PLAN 
+-------------------- 
+I will notify the manager 
+
+Thank you. 
+Alexandru Petrov 
+Oracle Global Customer Support 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Kashifuddin. 
+
+Please refer below steps and alter the capture and check the issue status. 
+
+Action plan 1: 
+
+Stop the capture and alter the first_scn to 11033950435284 
+
+exec dbms_capture_adm.stop_capture('PAYMENTEVENT_CAPTURE'); 
+
+BEGIN 
+DBMS_CAPTURE_ADM.ALTER_CAPTURE( 
+capture_name => 'PAYMENTEVENT_CAPTURE', 
+first_scn => 11033950435284); 
+END; 
+/ 
+
+exec dbms_capture_adm.start_capture('PAYMENTEVENT_CAPTURE'); 
+
+
+
+exec dbms_capture_adm.stop_capture('ACTEVENT_CAPTURE '); 
+
+BEGIN 
+DBMS_CAPTURE_ADM.ALTER_CAPTURE( 
+capture_name => 'ACTEVENT_CAPTURE ', 
+first_scn => 11033950403039); 
+END; 
+/ 
+
+exec dbms_capture_adm.start_capture('ACTEVENT_CAPTURE'); 
+
+
+OR 
+
+Action plan2: 
+
+Please restore all the archives and registry it and start the capture. 
+
+OR 
+
+Action Plan3: 
+
+Recreate the capture referring below documents 
+
+DOC ID 290143.1 - Minimum Archived Log Necessary to Restart 10g and 11g Streams Capture Process 
+DOC ID 471695.1 - Required Steps to Recreate a Capture Process. 
+
+Refer: 
+Oracle Support Master Note for Troubleshooting Streams Capture 'WAITING For REDO' or INITIALIZING ( Doc ID 313279.1 ) 
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+Please update
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+sys@BSCSPR> execute dbms_capture_adm.set_parameter('PAYMENTEVENT_CAPTURE ', '_CHECKPOINT_FORCE', 'Y'); 
+
+PL/SQL procedure successfully completed. 
+
+sys@BSCSPR> execute dbms_capture_adm.set_parameter('ACTEVENT_CAPTURE ', '_CHECKPOINT_FORCE', 'Y'); 
+
+PL/SQL procedure successfully completed. 
+
+
+sys@BSCSPR> select capture_name, start_scn,captured_scn,applied_scn,max_checkpoint_scn,required_checkpoint_scn from dba_capture; 
+
+CAPTURE_NAME START_SCN CAPTURED_SCN APPLIED_SCN MAX_CHECKPOINT_SCN REQUIRED_CHECKPOINT_SCN 
+-------------------- ------------------- ------------------- ------------------- ------------------- ----------------------- 
+PAYMENTEVENT_CAPTURE 11033867542136 11033867542136 11036381443085 11033951248185 11033950435284 
+ACTEVENT_CAPTURE 11033867542136 11036320920121 11036381440133 11033950590782 11033950403039 
+
+2 rows selected. 
+
+sys@BSCSPR> select capture_name, start_scn,captured_scn,applied_scn,max_checkpoint_scn,required_checkpoint_scn from dba_capture; 
+
+CAPTURE_NAME START_SCN CAPTURED_SCN APPLIED_SCN MAX_CHECKPOINT_SCN REQUIRED_CHECKPOINT_SCN 
+-------------------- ------------------- ------------------- ------------------- ------------------- ----------------------- 
+PAYMENTEVENT_CAPTURE 11033867542136 11033867542136 11036381443085 11033951248185 11033950435284 
+ACTEVENT_CAPTURE 11033867542136 11036320920121 11036381440133 11033950590782 11033950403039 
+
+2 rows selected. 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called 0526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+I called and provided the action plan.Now customer working on that. 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+Please execute below sql and check whether archives are moving or not and update the SR . 
+
+
+execute dbms_capture_adm.set_parameter('PAYMENTEVENT_CAPTURE ', '_CHECKPOINT_FORCE', 'Y'); 
+execute dbms_capture_adm.set_parameter('ACTEVENT_CAPTURE ', '_CHECKPOINT_FORCE', 'Y'); 
+
+
+STRMADMIN>col START_SCN format 999999999999999999 
+STRMADMIN>col CAPTURED_SCN format 999999999999999999 
+STRMADMIN>col APPLIED_SCN format 999999999999999999 
+STRMADMIN>col MAX_CHECKPOINT_SCN format 999999999999999999 
+STRMADMIN>col REQUIRED_CHECKPOINT_SCN format 999999999999999999 
+STRMADMIN>select capture_name, start_scn,captured_scn,applied_scn,max_checkpoint_scn,required_checkpoint_scn from dba_capture; 
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+SUNIL.POTLURI@DU.AE	- Tuesday		[Update from Customer]
+
+
+Please find the output of the query: 
+
+CAPTURE_NAME START_SCN CAPTURED_SCN APPLIED_SCN MAX_CHECKPOINT_SCN REQUIRED_CHECKPOINT_SCN 
+------------------------------ ------------------- ------------------- ------------------- ------------------- ----------------------- 
+PAYMENTEVENT_CAPTURE 11033867542136 11033867542136 11036381443085 11033951248185 11033950435284 
+ACTEVENT_CAPTURE 11033867542136 11036320920121 11036381440133 11033950590782 11033950403039 
+
+
+ 	 	 
+ 	
+ 
+ 
+SUNIL.POTLURI@DU.AE	- Tuesday		[Update from Customer]
+
+
+Upload to TDS successful for the file stream_July_11.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+Please check the minimum archived log required to start capture process .There is any log file is missing .if yes please restore and restart the capture process. 
+
+STRMADMIN>col START_SCN format 999999999999999999 
+STRMADMIN>col CAPTURED_SCN format 999999999999999999 
+STRMADMIN>col APPLIED_SCN format 999999999999999999 
+STRMADMIN>col MAX_CHECKPOINT_SCN format 999999999999999999 
+STRMADMIN>col REQUIRED_CHECKPOINT_SCN format 999999999999999999 
+STRMADMIN>select capture_name, start_scn,captured_scn,applied_scn,max_checkpoint_scn,required_checkpoint_scn from dba_capture; 
+
+
+Please refer below document and provide me streams health check report. 
+
+Streams Configuration Report and Health Check Script [ Doc ID 273674.1 ] 
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called 0526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+I called the customer and explained the regarding the issue.Now the are checking the archives, 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+My name is Iranna and I have been assigned to assist you on this service request.I will review this case and provide an update shortly. 
+
+
+Thanks, 
+Iranna 
+Global Customer Services 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 – 10:00 GMT / 18:30 – 03:00 PDT / 21:30 – 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Tuesday		[ODM Issue Clarification]
+
+
+We have seen that after DB upgrade from 10.2.0.4 to 10.2.0.5 and when the capture is started we are getting this state and there is no progress seen. The state of capture seen is "WAITING FOR DICTIONARY REDO: FIRST SCN 11033867542136 " 
+
+and in the alert log we are getting message 
+
+LOGMINER: krvxpsr summary for session# = 1399 
+LOGMINER: StartScn: 11036381443085 (0x0a09.9b98740d) 
+LOGMINER: EndScn: 0 
+LOGMINER: HighConsumedScn: 11036381443085 (0x0a09.9b98740d) 
+LOGMINER: session_flag 0x1 
+LOGMINER: LowCkptScn: 11033950435284 (0x0a09.0ab237d4) 
+LOGMINER: HighCkptScn: 11033951248185 (0x0a09.0abe9f39) 
+LOGMINER: SkipScn: 11033950435284 (0x0a09.0ab237d4) 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Update from Customer]
+
+
+
+CAPTURE_NAME STATE LATENCY_SECONDS CREATE_TIME ENQUEUE_TIME ENQUEUE_MESSAGE_NUMBER 
+-------------------- ------------------------------------------------------------ --------------- -------------------- -------------------- ---------------------- 
+PAYMENTEVENT_CAPTURE WAITING FOR DICTIONARY REDO: FIRST SCN 11033867542136 0 
+ACTEVENT_CAPTURE WAITING FOR DICTIONARY REDO: FIRST SCN 11033867542136 0 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Tuesday		[Customer Problem Description]
+
+
+Customer Severity 1 Details 
+--------------------------------------------------- 
+Work 24x7 option has been selected - Work hours for this Service Request are 24x7. 
+
+Severity 1 Contact Information 
+--------------------------------------------------- 
+** Customer's Management contact name: KashifuddinSyed Mohammed 
+** Customer's Management contact number: +971526849216 
+** Customer's Management E-mail Address: syed.kashifuddin1@du.ae 
+
+** Primary Customer contact name: Kashifuddin Syed Mohammed 
+** Primary Customer contact number: 0526849216 
+** Primary Customer E-mail Address: syed.kashifuddin@du.ae 
+** Primary Customer Contact Method: Email 
+
+** Secondary Customer contact name: Kashifuddin Syed Mohammed 
+** Secondary Customer contact number: +971528621872 
+** Alternate Contact Number: +971526849216 
+** Secondary Customer E-mail Address: syed.kashifuddin@du.ae 
+
+Customer Problem Description 
+--------------------------------------------------- 
+
+Problem Summary 
+--------------------------------------------------- 
+Capture process got struck in state "WAITING FOR DICTIONARY REDO: FIRST SCN 11033867542136 " 
+
+Problem Description 
+--------------------------------------------------- 
+Dear Suport, 
+
+We have seen that after DB upgrade from 10.2.0.4 to 10.2.0.5 and when the capture is started we are getting this state and there is no progress seen. The state of capture seen is "WAITING FOR DICTIONARY REDO: FIRST SCN 11033867542136 " 
+
+and in the alert log we are getting message 
+
+LOGMINER: krvxpsr summary for session# = 1399 
+LOGMINER: StartScn: 11036381443085 (0x0a09.9b98740d) 
+LOGMINER: EndScn: 0 
+LOGMINER: HighConsumedScn: 11036381443085 (0x0a09.9b98740d) 
+LOGMINER: session_flag 0x1 
+LOGMINER: LowCkptScn: 11033950435284 (0x0a09.0ab237d4) 
+LOGMINER: HighCkptScn: 11033951248185 (0x0a09.0abe9f39) 
+LOGMINER: SkipScn: 11033950435284 (0x0a09.0ab237d4) 
+
+
+Error Codes 
+--------------------------------------------------- 
+
+
+Problem Category/Subcategory 
+--------------------------------------------------- 
+Information Integration (AQ, CDC, Streams, Advanced Replication, Distributed Transactions, Message Gateway)/Streams 
+
+Uploaded Files 
+--------------------------------------------------- 
+
+
+Global Problem Definition Details 
+--------------------------------------------------- 
+Question: Select the relevant Streams Replication topic. 
+Answer: None of the above 
+
+Question: Select the closest area where the issue occurs. 
+Answer: Capture 
+
+Question: Select the relevant topic. 
+Answer: None of the above 
+
+Diagnosis: Review the following document to troubleshoot this issue: 
+
+Read Note:1408595.2 Information Center: Streams Troubleshooting 
+
+If the above solution does not resolve your issue, follow the steps detailed in the document below: 
+
+Read Note:1902222.1 SRDC - How to Collect Information for Troubleshooting a Streams Problem 
+
+We recommend saving this session as a draft Service Request (SR). Once data gathering is complete, proceed with the next step to upload requested data and submit SR. 
+
+
+=================
+
+Call - Outbound 
+------------------------------ 
+Acknowledged 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 20+ hours ago		[Notes]
+
+
+Hello Syed, 
+
+Please monitor for some time and upload the latest alert log files and Streams HC report.. 
+
+Regards, 
+Kanthi Kiran, 
+GCS 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- 20+ hours ago		[Update from Customer]
+
+
+Hi, 
+
+Ignored and started the capture & apply.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 21+ hours ago		[ODM Action Plan]
+
+
+Hello, 
+
+Since the below open transaction contains huge LCR's and this expected for the capture, please ignore the transaction from both the ends.. 
+
+ACTEVENT_APPLY	APPLY	246	23	1057071	3039327	3039327--->Huge LCR 
+
+Transaction ID : 246.23.1057071 
+
+
+And also please refer the below note, 
+
+Troubleshooting Streams Capture when status is Paused For Flow Control ( Doc ID 746247.1 ) 
+
+Regards, 
+Kanthi Kiran, 
+GCS 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 21+ hours ago		[ODM Data Collection]
+
+
+++ CAPTURE PROCESS PARAMETERS ++ 
+
+ACTEVENT_CAPTURE _SGA_SIZE	500	YES 
+
+PAYMENTEVENT_CAPTURE _SGA_SIZE	500 YES 
+
+++ Current Long Running Transactions ++ 
+Current transactions open for more than 20 minutes 
+
+INST_ID	Session	Transaction 
+ID	Txn Open 
+Minutes	Terminal	Program 
+1	3908,46223	124.0.3506748	340.28	UNKNOWN	oracle@bilprodb4 (P040) 
+1	6531,57074	59.35.8065420	104.20	UNKNOWN	oracle@bilprodb4 (J000) 
+1	6788,9617	268.36.1031910	365.17	bch@blprdap3 (TNS V1-V3) 
+1	6857,62339	137.19.2465309	1066.75	pts/13	bch@blprdap3 (TNS V1-V3) 
+
+
+++ OPEN STREAMS APPLY TRANSACTIONS ++ 
+
++** Count **+ 
+Streams Name	Open Transactions	Total LCRs 
+PAYMENTEVENT_APPLY	7	14 
+ACTEVENT_APPLY	120	3042421------------------------> 
+
+1	ACTEVENT_APPLY	APPLY	246	23	1057071	3039327	3039327--->Huge LCR 
+
++ CAPTURE STATISTICS ++ 
+
+C001	ACTEVENT_C APTURE	19:09:17 07/13/17	6728	17894	PAUSED FOR FLOW C ONTROL 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 22+ hours ago		[Notes]
+
+
+Hi, 
+
+I just got reassigned/assigned this SR. I am currently reviewing/researching the issue and will update the SR / call you as soon as we have relevant information. 
+
+
+Thanks, 
+kanthi Kiran 
+Global Customer Support 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 – 10:00 GMT / 18:30 – 03:00 PDT / 21:30 – 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 22+ hours ago		[Call - Inbound]
+
+
+Call - Inbound 
+---------------------------- 
+Customer contact name: Anantharaman, 
+Verify preferred method of contact: PHONE OR My Oracle Support customer portal 
+
+Phone#: ?0557141566 
+Email: syed.kashifuddin@du.ae 
+
+Comments for this update: Customer called requesting an update on the SR. Checked the SR is flagged 24/7 and the last engineer working on the SR is done with the shift hence SR is currently under reassignment process by the system to next available engineer. Advised he would be contacted once a new engineer is assigned. 
+
+ACTION PLAN 
+-------------------- 
+Updating the SR for call records. 
+
+Thank you. 
+George Golconda 
+Oracle Global Customer Support 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- 22+ hours ago		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- 22+ hours ago		[Update from Customer]
+
+
+Hi Team 
+
+Can you please update. We need to fix this asap.Still the ACTEVENT_CAPTURE is in Paused for flow control state 
+
+Thanks and Regards
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- 23+ hours ago		[Update from Customer]
+
+
+Hi, 
+
+Streams HC & AWR uploaded.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- 23+ hours ago		[Update from Customer]
+
+
+Upload to TDS successful for the file awr_streams_HC.zip.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- 23+ hours ago		[Update from Customer]
+
+
+Hi 
+
+The lag is huge. It's again struck paused for flow control. 
+
+I am unable to understand why we are unable to solve this issue
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Friday		[Notes]
+
+
+Thank you for the update. Please generate another health check report 30 minutes after the last one and also an AWR report for the same period of time. 
+
+Regards, 
+Luis 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Friday		[Update from Customer]
+
+
+Upload to TDS successful for the file streams_hc_140717.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Friday		[Update from Customer]
+
+
+Hi Luis 
+
+As advised we will wait for this transaction to complete. Once you get both the healthcheck reports compare and suggest us a way forward 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Friday		[Update from Customer]
+
+
+Hi Luis 
+
+As discussed the Apply Streams parallel processes have automatically cleared now and the apply has been enabled again. 
+
+As you have seen the apply process is still in paused for flow control state. The Reason which you have said being the huge LCRs count. 
+
+As per our discussion I am uploading current streams Healthcheck report and after half an hour I will upload the next one along with the awr. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Friday		[Notes]
+
+
+I spoke with the customer. 
+
+He restarted the apply. The capture is still in PAUSED FOR FLOW CONTROL due to the larg tranaction being processed. 
+
+I asked him to generate a new set of HC reports 30 minutes apart an an AWR report for the same period of time and upload that to the SR. 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+https://myoracle.webex.com/join/luis.sosa 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Luis 
+
+Just saw your update. We tried to stop the apply and start it again. 
+
+Stop failed with the following errors 
+
+* 
+ERROR at line 1: 
+ORA-26672: timeout occurred while stopping STREAMS process ACTEVENT_APPLY 
+ORA-06512: at "SYS.DBMS_LOGREP_UTIL", line 628 
+ORA-06512: at "SYS.DBMS_APPLY_ADM", line 55 
+ORA-06512: at line 1 
+
+
+So we have used force=> True to stop the same. But couple of parallel sessions have not yet got killed. This is preventing us to start the apply 
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Team 
+
+Can you please assign this SR to the next available engineer immediately we cannot wait for an update for hours as this is business critical 
+
+
+Thanks and Regards
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+From the latest health check report form the source, capture ACTEVENT_CAPTURE is PAUSED FOR FLOW CONTROL due to the large number of unbrowsed messages in the queue. 
+
+This is an indication of a problem either with the propagation or the apply. The apply process ACTEVENT_APPLY is applying a large transaction: 
+
+XID: 246.2.1057071	
+LCRs: 3039329 
+
+Large transaction will cause apply to serialize processing and will cause a performance degradation. There is no much to do to improve the performance in this case other than wait for the transaction to complete. 
+
+ACTION PLAN 
+============ 
+
+Please generate an AWR report for a 30 minute period of time when the performance problem is happening so we can see if there are any other issues that could be contributing to the problem. 
+
+Regards, 
+Luis 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Hemanth 
+
+The ACTEVENT_CAPTURE is in paused for flow control state, I have attached the latest Healthcheck report. 
+
+Can you kindly advise how to take it forward. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file strema_hc_13072017.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Syed, 
+
+Yes you need to stop and start the capture process to set the below parameter : 
+
+
+exec dbms_capture_adm.stop_capture ('CAPTURE'); 
+begin 
+
+dbms_capture_adm.set_parameter 
+
+('CAPTURE','_CHECKPOINT_FREQUENCY','1000'); 
+
+end; 
+
+/ 
+
+exec dbms_capture_adm.start_capture ('CAPTURE'); 
+
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Thursday		[Update from Customer]
+
+
+Do we need to stop and start the capture process ?
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Syed, 
+
+As discussed over the call , Can you please set the "_CHECKPOINT_FREQUENCY" parameter tot 1000 and let us know the status : 
+
+
+
+exec dbms_capture_adm.stop_capture ('CAPTURE'); 
+begin 
+
+dbms_capture_adm.set_parameter 
+
+('CAPTURE','_CHECKPOINT_FREQUENCY','1000'); 
+
+end; 
+
+/ 
+
+exec dbms_capture_adm.start_capture ('CAPTURE'); 
+
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+On Call with the Syed and discussing the issue 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file strema_hc_1747.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Thursday		[Update from Customer]
+
+
+uploading the streams health check. Don't see any progress until now.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Team, 
+
+Please continue to monitor for some time around 30 mins and then provide the latest Streams Health-check report for further analysis. 
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi, 
+
+We have set to ignore. What is the next step.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Syed, 
+
+Please follow the below steps to ignore the transaction ID on both the Capture and Apply Site: 
+
+
+
+Capture Site: 
+========== 
+For ignoring transaction at capture , use the following steps on source site: 
+
+execute dbms_capture_adm.stop_capture('<capture_name>'); 
+execute dbms_capture_adm.set_parameter('<capture_name>','_ignore_transaction','<local_transaction_id>'); 
+execute dbms_capture_adm.start_capture('<capture_name>'); 
+
+
+Apply Site: 
+========= 
+A transaction can be ignored at the apply site, as follows: 
+
+execute dbms_apply_adm.stop_apply('<apply_name>'); 
+execute dbms_apply_adm.set_parameter ('<apply_name>','_ignore_transaction','<local_transaction_id>'); 
+execute dbms_apply_adm.start_apply('<apply_name>') 
+
+
+Note: 
+======= 
+How to Ignore a Long-Running Transactions in Oracle Streams ( Doc ID 1906221.1 ) 
+
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+Asked the Customer to ignore the transaction 6.34.7554249 on both the capture and target end . 
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Hemanth 
+
+Please give the archive file that needs to be mined before running the logmnr contents 
+
+select operation,SQL_REDO,SQL_UNDO, scn, data_obj# , timestamp ,table_name from v$logmnr_contents where xidusn=6 and xidslt=34 and xidsqn=7554249; 
+select operation,SQL_REDO,SQL_UNDO, scn, data_obj# , timestamp ,table_name from v$logmnr_contents where xidusn=6 and xidslt=34 and xidsqn=7554249 
+* 
+ERROR at line 1: 
+ORA-01306: dbms_logmnr.start_logmnr() must be invoked before selecting from 
+v$logmnr_contents 
+
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Team, 
+
+Please find the below below transaction ID which needs to be ignored both on the Capture and Apply process : 
+
+
+select operation,SQL_REDO,SQL_UNDO, scn, data_obj# , timestamp ,table_name from v$logmnr_contents where xidusn=6 and xidslt=34 and xidsqn=7554249; 
+
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Hemanth 
+
+As discussed on call now, please specify the long running transaction details along with how to get the sid and then the details of the archive file which we specifically need to mine. 
+
+Also this should help us to make sure that the Streams delay is getting reduced. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Hemanth 
+
+As discussed on call we need the long running transaction details. The Note below is generic, we need specific details of the archive file number and the sid transaction details. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Team, 
+
+Please refer the below DOC ID : 
+
+??How to Use LogMiner to Determine Problem SQL in a Streams Environment ( Doc ID 311620.1 ) 
+
+
+To find out the sql's involved in the long running transaction, we need to invoke the log miner by using below procedures. 
+
+To mine the corresponding archived redo logs: 
+
+fqfn=Fully qualified file name of archived redo log 
+
+exec dbms_logmnr.add_logfile('&fqfn'); 
+exec dbms_logmnr.add_logfile('&fqfn'); ---- as many as you need of these 
+exec dbms_logmnr.start_logmnr(); 
+select operation,SQL_REDO,SQL_UNDO, scn, data_obj# , timestamp ,table_name from v$logmnr_contents where xidusn=&xidusn and xidslt=&xidslt and xidsqn=&xidsqn; 
+
+
+
+Example: 
+
+select operation, scn, data_obj# , table_name, timestamp, sql_redo 
+from v$logmnr_contents 
+where xidusn=220 and xidslt=29 and xidsqn=410098; 
+
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+Called the customer and discussed the issue , Will review the uploaded Alert-log file and AWR report . 
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file alert_BSCSPR.zip.
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file awrrpt_13032017_1430.html.
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Hemanth 
+
+Please find the awr report 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+SYED.KASHIFUDDIN@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi 
+Please call me back
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+HI Team, 
+
+Can you please generate and upload the AWR report and also can you provide me the latest Alert-log file for review. 
+
+Thanks, 
+Hemanth 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+Customer was unavailable 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Resmi 
+
+Please find the current parameters which have been set in our environment. 
+
+CAPTURE_NAME PARAMETER VALUE SET 
+------------------------------ -------------------- -------------------- --- 
+ACTEVENT_CAPTURE DISABLE_ON_LIMIT N NO 
+ACTEVENT_CAPTURE DOWNSTREAM_REAL_TIME Y NO 
+_MINE 
+
+ACTEVENT_CAPTURE _SGA_SIZE 500 YES 
+ACTEVENT_CAPTURE _CHECKPOINT_FREQUENC 200 YES 
+Y 
+
+ACTEVENT_CAPTURE _CHECKPOINT_FORCE N YES 
+ACTEVENT_CAPTURE WRITE_ALERT_LOG Y NO 
+ACTEVENT_CAPTURE TRACE_LEVEL 0 NO 
+ACTEVENT_CAPTURE TIME_LIMIT INFINITE NO 
+ACTEVENT_CAPTURE STARTUP_SECONDS 0 NO 
+ACTEVENT_CAPTURE PARALLELISM 1 NO 
+ACTEVENT_CAPTURE MESSAGE_LIMIT INFINITE NO 
+ACTEVENT_CAPTURE MAXIMUM_SCN INFINITE NO 
+PAYMENTEVENT_CAPTURE DISABLE_ON_LIMIT N NO 
+PAYMENTEVENT_CAPTURE _CHECKPOINT_FREQUENC 200 YES 
+Y 
+
+PAYMENTEVENT_CAPTURE _CHECKPOINT_FORCE N YES 
+PAYMENTEVENT_CAPTURE WRITE_ALERT_LOG Y NO 
+PAYMENTEVENT_CAPTURE TRACE_LEVEL 0 NO 
+PAYMENTEVENT_CAPTURE _SGA_SIZE 500 YES 
+PAYMENTEVENT_CAPTURE STARTUP_SECONDS 0 NO 
+PAYMENTEVENT_CAPTURE PARALLELISM 1 NO 
+PAYMENTEVENT_CAPTURE MESSAGE_LIMIT INFINITE NO 
+PAYMENTEVENT_CAPTURE MAXIMUM_SCN INFINITE NO 
+PAYMENTEVENT_CAPTURE DOWNSTREAM_REAL_TIME Y NO 
+_MINE 
+
+PAYMENTEVENT_CAPTURE TIME_LIMIT INFINITE NO 
+
+24 rows selected. 
+
+
+Kindly advise if we can set parallelism to a higher value (say 6) and will it improve the performance. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Team, 
+
+I just got reassigned/assigned this SR. I am currently reviewing/researching the issue and will update the SR / call you as soon as we have relevant information. 
+
+Thanks, 
+Hemanth Kumar 
+Global Customer Services 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Resmi 
+
+We have uploaded the latest healtcheck report. Kindly check and advise 
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file strema_hc_130717_0225PM.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Resmi, 
+
+We have done the changes. We will upload the latest health check report.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Kashifuddin, 
+
+Please use below sql and identify the transactions. 
+
+select operation, scn, data_obj# , table_name, timestamp, sql_redo from v$logmnr_contents where xidusn=194 and xidslt=25 and xidsqn=1672955; 
+
+
+Transactions details: 
+
+NST_ID	Streams Name	Streams Ty	XIDUSN	XIDSLT	XIDSQN	CUMULATIVE_MESSAGE_COUNT	TOTAL_MESSAGE_COUNT	FIRST_MESSAGE_TIM	FIRST_MESSAGE_NUMBER	LAST_MESSAGE_TIME	LAST_MESSAGE_NUMBER 
+1	ACTEVENT_CAPTURE	CAPTURE	194	25	1672955	1	0	23:05:02 07/12/17	1.1038E+13	23:05:02 07/12/17 
+
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[ODM Action Plan]
+
+
+Hi , 
+
+The Capture processes configured seems to be in state CAPTURING CHANGES, the apply seems to be in state DEQUEUE MESSAGES and the Current Number of Outstanding Messages in Queue seems to be 0. 
+Please change the checkpoint_retention_time to 1 and enforce a few checkpoints. 
+
+1) Change the checkpoint_retention_time to 1 using below statement 
+exec DBMS_CAPTURE_ADM.ALTER_CAPTURE( CAPTURE_NAME => '<capture name>',checkpoint_retention_time => 1); 
+
+2) Force checkpoints using the below statement. 
+. 
+BEGIN 
+DBMS_CAPTURE_ADM.SET_PARAMETER( 
+capture_name => '<capture name>', 
+parameter => '_checkpoint_force', 
+value => 'Y'); 
+END; 
+
+Also since there are spilled messages in the queue, please purge the apply spilled messages to improve the apply performance- 
+
+Article-ID: Note 472440.1 
+Title: How to Purge Apply Spilled Transactions in Streams Environment. ( Doc ID 472440.1 ) 
+
+
+Thank you, 
+Resmi 
+Global Customer Services 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 - 10:00 GMT / 18:30 - 03:00 PDT / 21:30 - 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Support Manager Update 
+------------------------------ 
+Called customer at +971526849216. Updated customer that we are involving a senior engineer to review and start a call with webex session. 
+
+Regards 
+Bhakti 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[ODM Data Collection]
+
+
+BSCSPR bilprodb4 10.2.0.5.0 
+
+Capture 
+Name Queue 
+PAYMENTEVENT_CAPTURE EMCDU.INT$PAYMEVENT_Q 
+ACTEVENT_CAPTURE EMCDU.INT$ACTEVENT_Q 
+
+Apply 
+Name Queue 
+Name 
+ACTEVENT_APPLY EMCDU.INT$ACTEVENT_Q 
+PAYMENTEVENT_APPLY EMCDU.INT$PAYMEVENT_Q 
+
+Days to 
+Retain 
+Checkpoints 
+0 
+0 
+
+Queue 
+Name STARTUP_TIME Current Number of 
+Outstanding 
+Messages 
+in Queue Current Number of 
+Spilled 
+Messages 
+in Queue 
+EMCDU.INT$PAYMEVENT_Q 07:08:06 07/11/17 0 0 
+EMCDU.INT$ACTEVENT_Q 07:08:06 07/11/17 0 0 
+
+Capture 
+Process 
+Number Capture 
+Name Startup Timestamp Session 
+ID Session 
+Serial 
+Number State 
+C002 PAYMENTEVE NT_CAPTURE 05:16:57 07/12/17 3628 13938 CAPTURING CHANGES 
+C001 ACTEVENT_C APTURE 05:16:48 07/12/17 3927 27285 CAPTURING CHANGES 
+
+Apply Name Captured or 
+User-Enqueued L Process STATE 
+PAYMENTEVENT_APPLY Captured LCRS P037 DEQUEUE MESSAGES 
+ACTEVENT_APPLY Captured LCRS P032 DEQUEUE MESSAGES 
+
+Apply Name Dequeued Message 
+Creation 
+Timestamp 
+23:25:59 07/12 
+23:05:01 07/12 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Manager Request]
+
+
+Name of person calling : Vinod Valsalan 
+
+Who needs to be contacted : Kashif 
+
+Phone# : +971526849216 
+
+Reason for Manager Request? Huge impact on the production billing environment of TELCO. The lags are increasing and customer feels an expert on a webex would be able to pin point the cause and provide a fix. 
+
+Call Back Required (Y/N)? Yes 
+
+
+
+
+**** This information to be documented by Manager **** 
+
+Contact/Communication details (documented by Manager): 
+
+Agreed upon action plan and expectations (documented by Manager): 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+I have done the changes as recommended.
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+Call - Inbound 
+---------------------------- 
+Customer contact name: Kashifuddin Syed Mohammed 
+Verify preferred method of contact: PHONE OR My Oracle Support customer portal 
+
+Phone#: ?0557141566 
+Email: syed.kashifuddin@du.ae 
+
+Comments for this update: Vinod Valsalan called and asked for escalation and manager callback. 
+
+ACTION PLAN 
+-------------------- 
+Informing the manager. 
+
+Thank you. 
+Radu Treanta 
+Oracle Global Customer Support 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+******************* Request Management Attention ******************* 
+
+Reason for requested management attention, including business impact of the problem that requires attention 
+Huge impact on the production billing environment of TELCO. The lags are increasing and customer feels an expert on a webex would be able to pin point the cause and provide a fix. 
+
+Business or implementation milestone, critical date(s) (milestone date or resolve by date), along with the type of business or implementation milestone 
+Production Environment 
+
+Name of the person requesting management attention, contact information: phone number, pager, email address 
+
+Kashif on +971526849216 
+
+******************* Request Management Attention *******************
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Ananth, 
+
+Please check below transaction detail with your application team .If possible commit that or rollback that transactions. 
+
+ACTEVENT_CAPTURE CAPTURE 194.25.1672955 1 0 23:05:02 07/12/17 1.1038E+13 23:05:02 07/12/17 
+
+
+Please increase the _SGA_SIZE 50 to 150 on both the capture and JOB_QUEUE_PROCESSES 10 to 300 (Range of values	0 to 1000) 
+
+exec dbms_capture_adm.set_parameter('<capture_name>','_SGA_SIZE','150'); 
+
+or 
+
+Begin 
+dbma_capure_adm.set_parameter(capture_name=> '<CAPTURE_NAME>', 
+parmeter => '_SGA_SIZE', 
+value=> '150'); 
+
+
+
+Please clear the below apply queue errors: 
+
+Apply error 
+++ ERROR QUEUE + 
+
+ACTEVENT_APPLY 
+6949 rows selected. 
+
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[ODM Data Collection]
+
+
+++ OPEN STREAMS CAPTURE TRANSACTIONS ++ 
+============================================ 
++** Detail **+ 
+INST_ID	Streams Name	Streams Ty	XIDUSN	XIDSLT	XIDSQN	CUMULATIVE_MESSAGE_COUNT	TOTAL_MESSAGE_COUNT	FIRST_MESSAGE_TIM	FIRST_MESSAGE_NUMBER	LAST_MESSAGE_TIME	LAST_MESSAGE_NUMBER 
+1	ACTEVENT_CAPTURE	CAPTURE	194	25	1672955	1	0	23:05:02 07/12/17	1.1038E+13	23:05:02 07/12/17 
+
+
+Apply error 
+++ ERROR QUEUE + 
+
+ACTEVENT_APPLY 
+6949 rows selected. 
+
+ERROR: Apply 'ACTEVENT_APPLY' has placed 6949 transactions in the error queue! Please check the dba_apply_error view. 
++ 
+
+
+job_queue_processes	10 
+
+++ Current Long Running Transactions ++ 
+Current transactions open for more than 20 minutes 
+
+49 rows selected. 
+
+++ APPLY SPILLED TRANSACTIONS ++ 
+1334 rows selected. 
+
+++ Current Long Running Transactions ++ 
+Current transactions open for more than 20 minutes 
+1	4922,29417	137.16.2464313	89.42	UNKNOWN	oracle@bilprodb4 (J001) 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Notes]
+
+
+Hi Ananth , 
+
+I received your SR as the previous engineer was not available. I'm reviewing your issue now and will update this SR shortly. 
+
+Thanks, 
+Iranna 
+Global Customer Services 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 – 10:00 GMT / 18:30 – 03:00 PDT / 21:30 – 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Iranna 
+
+As discussed kindly let us know the way forward we will discuss with the application team and take a call accordingly. 
+
+Points discussed: 
+
+1. Long Running Transactions which are causing the streams process delay to be identified and shared 
+
+2. Transactions causing this delay, Any Transactions that can be ignored to move the sync forward 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Thursday		[Call - Inbound]
+
+
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Upload to TDS successful for the file strema_hc_130717.html.gz.
+
+ 	 	 
+ 	
+ 
+ 
+ANANTHARAMAN.SEKAR@DU.AE	- Thursday		[Update from Customer]
+
+
+Hi Team 
+
+We waited for the capture to catch up during the night but still we see a huge delay though capturing changes has not stopped. 
+
+Attached the latest healthcheck report. Kindly check and advise a way forward to solve this lag. 
+
+Thanks and Regards 
+Ananth
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+I can able to see below long running transaction in the capture side and apply spilled transactions also. 
+
++ APPLY SPILLED TRANSACTIONS ++ 
+
+Creation Time 
+ACTEVENT_APPLY 487.44.130947 1.1018E+13 01:07:43 05/05/17 2 03:57:13 05/14/17 
+249.2.835623 1.1018E+13 00:04:07 05/05/17 15 03:57:13 05/14/17 
+
+++ Current Long Running Transactions ++ 
+Current transactions open for more than 20 minutes 
+INST_ID Session Transaction 
+ID Txn Open 
+Minutes Terminal Program 
+1 4061,12608 158.34.2098966 123.47 DV04CTXAS9 1 Toad.exe 
+1 4602,38966 74.6.5197000 62.30 UNKNOWN oracle@bilprodb4 (J001) 
+1 4680,48290 200.14.1573024 31.68 DV04CTXAS9 1 Toad.exe 
+1 6154,3414 51.12.7501660 195.10 pts/4 bch@blprdap3 (TNS V1-V3) 
+1 6511,23354 135.6.2553548 21.00 sqlplus@blprdap1 (TNS V1-V3 ) 
+
+
+Please refer below documents and purge the spill transactions on apply side and check the issue status.. 
+
+How to Purge Apply Spilled Transactions in Streams Environment. ( Doc ID 472440.1 ) 
+Troubleshooting Long-Running Transactions in Oracle Streams ( DOC ID 783927.1 ) 
+
+
+Thanks, 
+Iranna 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[ODM Issue Clarification]
+
+
+Latency Applied 
+Apply Process In Message Message 
+Name Seconds Creation Apply Time Number 
+-------------------- ------- ----------------- ----------------- --------------- 
+ACTEVENT_APPLY 4295 10:27:38 07/12/17 11:39:13 07/12/17 11037137338108 
+PAYMENTEVENT_APPLY 4115 10:30:36 07/12/17 11:39:11 07/12/17 11037138683927 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Notes]
+
+
+Hi Kashifuddin, 
+
+
+My name is Iranna , and I have been assigned to your service request.I will update you as soon as possible after reviewing your issue 
+
+
+Thanks, 
+Iranna 
+Global Customer Services 
+Working Hours: Mon-Fri - 07:00 - 15:30 IST / 01:30 – 10:00 GMT / 18:30 – 03:00 PDT / 21:30 – 06:00 EDT 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[ODM Data Collection]
+
+
+++ Current Long Running Transactions ++ 
+Current transactions open for more than 20 minutes 
+
+INST_ID	Session	Transaction 
+ID	Txn Open 
+Minutes	Terminal	Program 
+1	4061,12608	158.34.2098966	123.47	DV04CTXAS9 1	Toad.exe 
+1	4602,38966	74.6.5197000	62.30	UNKNOWN	oracle@bilprodb4 (J001) 
+1	4680,48290	200.14.1573024	31.68	DV04CTXAS9 1	Toad.exe 
+1	6154,3414	51.12.7501660	195.10	pts/4	bch@blprdap3 (TNS V1-V3) 
+1	6511,23354	135.6.2553548	21.00	sqlplus@blprdap1 (TNS V1-V3 ) 
+
+
+
+++ APPLY SPILLED TRANSACTIONS ++ 
+Apply Name	Transaction 
+ID	SCN of First 
+Message in Txn	First Message 
+Creation Time	Count of 
+Messages in Txn	Spill 
+Creation Time 
+ACTEVENT_APPLY	487.44.130947	1.1018E+13	01:07:43 05/05/17	2	03:57:13 05/14/17 
+249.2.835623	1.1018E+13	00:04:07 05/05/17	15	03:57:13 05/14/17 
+252.1.840797	1.1018E+13	00:04:07 05/05/17	2	03:57:13 05/14/17 
+450.34.154211	1.1018E+13	01:07:44 05/05/17	2	03:57:13 05/14/17 
+14.14.7594527	1.1018E+13	01:07:47 05/05/17	2	03:57:13 05/14/17 
+700.9.51664	1.1018E+13	02:36:53 05/05/17	7	03:57:13 05/14/17 
+355.10.422576	1.1018E+13	02:36:56 05/05/17	4	03:57:13 05/14/17 
+
+ 	 	 
+ 	
+ 
+ 
+	Oracle Support	- Wednesday		[Call - Outbound]
+
+
+Call - Outbound 
+------------------------------ 
+Called +971 526849216. 
+Spoke to Kashifuddin Syed Mohammed. 
+
+I called and collected the issue related information 

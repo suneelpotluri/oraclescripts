@@ -1,0 +1,4 @@
+--Script to list the disk avilable in the system 
+SET LINES 200;
+col PATH format a60;
+SELECT NAME ,HEADER_STATUS,PATH,OS_MB/1024 FROM V$ASM_DISK;

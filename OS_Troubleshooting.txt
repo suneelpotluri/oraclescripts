@@ -1,0 +1,12 @@
+Top 10 CPU Utilization
+***********************
+ps -e -o pid,user,pcpu,pmem,stime,vsz,rss,user,args | sort -k 3,3nr | head -10
+
+
+Top 10 Memory  Utilization
+***************************
+ps -e -o pid,user,pcpu,pmem,stime,vsz,rss,user,args | sort -k 7,7nr | head -10
+
+IO Stats
+************
+iostat -xn

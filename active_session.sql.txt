@@ -1,0 +1,6 @@
+set lines 300;
+col MACHINE format a40;
+select 
+	sid,serial#,inst_id,status,USERNAME,MACHINE,ROUND(LAST_CALL_ET/60) ELAPSED_MIN 
+	from gv$session 
+	where status='ACTIVE' and username like '&user%' order by 3;

@@ -1,0 +1,34 @@
+-- Script to find the CPU consuming query in the database
+SET PAGESIZE 60
+SET LINESIZE 300 
+COLUMN username FORMAT A15
+COLUMN "cpu usage(seconds)"  FORMAT 999,999,999.0000
+col SQL_TEXT for a80 word_wrapped
+ 
+SELECT
+	s.inst_id,
+   s.username,   
+   t.sid,
+   s.serial#,
+   SUM(VALUE/100) as "cpu usage(seconds)",
+   b.sql_id,
+   b.sql_text
+FROM
+   gv$session s,
+   gv$sesstat t,
+   gv$statname n,
+   gv$sqlarea b
+WHERE
+   t.STATISTIC# = n.STATISTIC#
+AND
+   NAME like '%CPU used by this session%'
+AND
+   t.SID = s.SID
+AND
+   s.status='ACTIVE'
+AND
+   s.username is not null
+AND
+   s.sql_address=b.address
+GROUP BY username,t.sid,s.serial#,s.inst_id,b.sql_text,b.sql_id
+/

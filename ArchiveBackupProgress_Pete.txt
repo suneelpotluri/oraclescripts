@@ -1,0 +1,11 @@
+set lines 132
+set pages 99
+col filename format a50
+col bytes format 999,999,999,999
+col total_bytes format 999,999,999,999
+col total_mb  format 999,999,999,999
+col open_time format a15
+select filename, status, total_bytes, bytes, to_char(open_time,'YYYYMMDD:HH24:MI') open_time 
+from  v$backup_async_io
+where  status not like 'UNKNOWN%' and status <> 'FINISHED'
+and    open_time > to_date('22-OCT-2017 17:30:00','DD-MON-YYYY HH24:MI:SS');

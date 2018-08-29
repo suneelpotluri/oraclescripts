@@ -1,0 +1,111 @@
+--- Info about apply process
+select * from dba_apply;
+
+SELECT APPLY_NAME,QUEUE_NAME,RULE_SET_NAME,DECODE(APPLY_CAPTURED,'YES', 'Captured','NO', 'User-Enqueued') APPLY_CAPTURED,STATUS
+FROM DBA_APPLY;
+
+--- Find out apply process status
+select apply_name,status 
+from dba_apply;
+exec dbms_apply_adm.start_apply(apply_name=>'&apply_name');
+exec dbms_apply_adm.stop_apply(apply_name=>'&apply_name');
+
+--- Apply parameter
+
+SELECT PARAMETER,VALUE,SET_BY_USER
+FROM DBA_APPLY_PARAMETERS
+WHERE APPLY_NAME = '&apply_parameter';
+
+BEGIN
+DBMS_APPLY_ADM.SET_PARAMETER(apply_name => '&apply_parameter',parameter => 'commit_serialization',value => 'none');
+END;
+/
+-- Determine any instantiation
+-- Instantiation SCN is SCN that apply process discard any SCN lower than or equal and commit any SCN higher than that.
+
+SELECT SOURCE_DATABASE,SOURCE_OBJECT_OWNER,SOURCE_OBJECT_NAME,
+INSTANTIATION_SCN
+FROM DBA_APPLY_INSTANTIATED_OBJECTS;
+
+--- Find out about any handler -- Any DML handler
+SELECT OBJECT_OWNER,OBJECT_NAME,OPERATION_NAME,USER_PROCEDURE,
+DECODE(ERROR_HANDLER,'Y', 'Error','N', 'DML') ERROR_HANDLER
+FROM DBA_APPLY_DML_HANDLERS
+WHERE APPLY_DATABASE_LINK IS NULLORDER BY OBJECT_OWNER, OBJECT_NAME, ERROR_HANDLER;
+
+-- Any DDL/Message handler
+SELECT APPLY_NAME, DDL_HANDLER, MESSAGE_HANDLER FROM DBA_APPLY;
+
+-- Using key substitution for any table
+-- Key substitution is useful when there is no PK for distinguishing rows.
+SELECT OBJECT_OWNER, OBJECT_NAME, COLUMN_NAME, APPLY_DATABASE_LINK
+FROM DBA_APPLY_KEY_COLUMNS
+ORDER BY APPLY_DATABASE_LINK, OBJECT_OWNER, OBJECT_NAME;
+
+-- Update conflict handler
+SELECT OBJECT_OWNER,OBJECT_NAME,METHOD_NAME,RESOLUTION_COLUMN,
+COLUMN_NAME
+FROM DBA_APPLY_CONFLICT_COLUMNS
+ORDER BY OBJECT_OWNER, OBJECT_NAME, RESOLUTION_COLUMN;
+
+-- Reader servers
+-- In parallel servers, reader server dequeues data and translates them to transactions,It also checks dependencies, Delivers all data to coordinator
+SELECT DECODE(ap.APPLY_CAPTURED,'YES','Captured LCRS','NO','User-enqueued messages','UNKNOWN') APPLY_CAPTURED,SUBSTR(s.PROGRAM,INSTR(S.PROGRAM,'(')+1,4) PROCESS_NAME,r.STATE,r.TOTAL_MESSAGES_DEQUEUED
+FROM V$STREAMS_APPLY_READER r, V$SESSION s, DBA_APPLY ap
+WHERE r.APPLY_NAME = '&apply_name' AND r.SID = s.SID AND r.SERIAL# = s.SERIAL# AND r.APPLY_NAME = ap.APPLY_NAME;
+
+-- Check out latency
+-- Capture to dequeue latency
+-- Latency : =(Dequeue_time in dest database - event creation in source DB)
+-- Creation: = Time when redo log generated in source database / time user-message enqueued
+-- Message number = MSG number which was dequeued.
+SELECT (DEQUEUE_TIME-DEQUEUED_MESSAGE_CREATE_TIME)*86400 LATENCY,TO_CHAR(DEQUEUED_MESSAGE_CREATE_TIME,'HH24:MI:SS MM/DD/YY') CREATION,TO_CHAR(DEQUEUE_TIME,'HH24:MI:SS MM/DD/YY') LAST_DEQUEUE,DEQUEUED_MESSAGE_NUMBERFROM V$STREAMS_APPLY_READERWHERE APPLY_NAME = '&apply_name';
+
+--- Capture to apply latency
+SELECT (HWM_TIME-HWM_MESSAGE_CREATE_TIME)*86400 "Latency in Seconds",TO_CHAR(HWM_MESSAGE_CREATE_TIME,'HH24:MI:SS MM/DD/YY') "Event Creation",TO_CHAR(HWM_TIME,'HH24:MI:SS MM/DD/YY') "Apply Time",HWM_MESSAGE_NUMBER "Applied Message Number"
+FROM V$STREAMS_APPLY_COORDINATOR
+WHERE APPLY_NAME = '&apply_name';
+OR
+SELECT (APPLY_TIME-APPLIED_MESSAGE_CREATE_TIME)*86400 "Latency in Seconds",TO_CHAR(APPLIED_MESSAGE_CREATE_TIME,'HH24:MI:SS MM/DD/YY')"Event Creation",TO_CHAR(APPLY_TIME,'HH24:MI:SS MM/DD/YY') "Apply Time",APPLIED_MESSAGE_NUMBER "Applied Message Number"
+FROM DBA_APPLY_PROGRESSWHERE APPLY_NAME = '&apply_name';
+
+--- Apply coordinator
+select * from v$streams_apply_coordinator;
+
+------ Effectiveness of parallelism in apply process.
+SELECT COUNT(SERVER_ID) "Effective Parallelism"
+FROM V$STREAMS_APPLY_SERVER
+WHERE APPLY_NAME = 'STRMADMIN_ORA9IPR_US_ORAC' ANDTOTAL_MESSAGES_APPLIED > 0;
+-- How many message applied by each apply process
+SELECT SERVER_ID, TOTAL_MESSAGES_APPLIED
+FROM V$STREAMS_APPLY_SERVER
+WHERE APPLY_NAME = 'STRMADMIN_ORA9IPR_US_ORAC'ORDER BY SERVER_ID;
+--- Find apply error -- Find out apply error reason, two options : reexecute transaction, delete transaction.
+select * from apply_error;
+-- Find out progpagation rule set
+SELECT RULE_SET_OWNER, RULE_SET_NAMEFROM DBA_applyWHERE apply_NAME = '&apply_name';
+
+select STREAMS_NAME,STREAMS_TYPE,RULE_TYPE,RULE_NAME,
+TABLE_OWNER'.'TABLE_NAME,RULE_OWNER,RULE_CONDITION 
+from "DBA_STREAMS_TABLE_RULES" 
+where streams_type='APPLY' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name)
+union all
+select STREAMS_NAME,STREAMS_TYPE,RULE_TYPE,RULE_NAME,
+SCHEMA_NAME,RULE_OWNER,RULE_CONDITION 
+from "DBA_STREAMS_SCHEMA_RULES" 
+where streams_type='APPLY' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name)
+union all
+select STREAMS_NAME,STREAMS_TYPE,RULE_TYPE,RULE_NAME,
+null,RULE_OWNER,RULE_CONDITION 
+from "DBA_STREAMS_GLOBAL_RULES" 
+where streams_type='APPLY' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name);
+
+-- Which DML/DDL rules the capture process is capturing
+select * from "DBA_STREAMS_TABLE_RULES" 
+where streams_type='APPLY' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name and apply_name='&apply_name');
+-- Which schame rules the capture process is capturing
+select * from "DBA_STREAMS_SCHEMA_RULES" 
+where streams_type='APPLY' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name and apply_name='&apply_name');
+-- Which global rules the capture process is capturing
+select * from "DBA_STREAMS_GLOBAL_RULES" 
+where streams_type='PROPAGATION' and rule_name in (select rule_name from DBA_RULE_SET_RULES a, dba_apply b where a.rule_set_name=b.rule_set_name and apply_name='&apply_name');

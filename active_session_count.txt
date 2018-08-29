@@ -1,0 +1,8 @@
+set lines 200;
+col username format a20;
+col machine format a15;
+select count(*),username ,inst_id,machine,status 
+	from gv$session 
+	where status='ACTIVE' 
+	and username like '&user%' 
+	group by  username ,inst_id,machine,status order by 2;

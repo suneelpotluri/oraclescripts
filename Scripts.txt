@@ -1,0 +1,3661 @@
+select partition_name,
+       subpartition_name,
+       stale_stats               /* YES or NO */
+from   dba_tab_statistics
+where  table_name = 'EAI_LOG';
+
+SQL> exec dbms_stats.gather_schema_stats(ownname=>'STG_SIEBEL',estimate_percent=>DBMS_STATS.AUTO_SAMPLE_SIZE,cascade=>DBMS_STATS.AUTO_CASCADE,degree=>8);
+
+PL/SQL procedure successfully completed.
+
+set linesize 300 
+set pagesize 1000 
+col HOST_NAME format a30 
+col INSTANCE_NAME format a30 
+col PLATFORM_NAME format a60 
+set pagesize 1000 
+set linesize 300 
+col comments format a50; 
+col ACTION_TIME format a60; 
+set linesize 300 
+set pagesize 1000 
+select HOST_NAME,INSTANCE_NAME from v$instance; 
+column HOST_NAME new_value host1 noprint; 
+column INSTANCE_NAME new_value instfile1 noprint; 
+spool &host1._&instfile1..txt 
+select HOST_NAME,INSTANCE_NAME from v$instance; 
+SELECT SUBSTR(metadata,109,4) "Metadata", CASE SUBSTR(metadata,109,4) WHEN 'B023' THEN 'Database was created as 32-bit' WHEN 'B047' THEN 'Database was created as 64-bit' ELSE 'Metadata not Matching' END "Initial DB Creation Info" FROM sys.kopm$; 
+
+select ACTION_TIME,ACTION,VERSION,COMMENTS from sys.registry$history; 
+select PATCH_ID,ACTION,ACTION_TIME,DESCRIPTION from sys.DBA_REGISTRY_SQLPATCH; 
+select PLATFORM_ID,PLATFORM_NAME from v$database; 
+select distinct STAT_NAME,VALUE from dba_hist_osstat where STAT_NAME in('NUM_CPU_CORES','NUM_CPUS'); 
+select distinct STAT_NAME,round(VALUE/1024/1024/1024)  from dba_hist_osstat where STAT_NAME='PHYSICAL_MEMORY_BYTES'; 
+-- dbsize 
+prompt DB size in GB 
+select round(sum(bytes)/1024/1024/1024) from dba_data_files; 
+-- sga and pga 
+show parameter sga_max_size 
+show parameter pga_aggregate_target 
+prompt Max Memory Utilized 
+select round(sum(MAX_SIZE/1024/1024/1024)) from v$sga_dynamic_components;
+Select instance_name from v$instance;
+show parameter instance
+
+
+
+
+HP UX CPU and Memory Usage
+echo " %CPU PID RUSER COMMAND" ;UNIX95= ps -ef -o 'pcpu pid ruser args'|sort -nr|head -10
+
+echo " SZ PID RUSER COMMAND";UNIX95= ps -ef -o 'sz pid ruser args' |sort -nr|head -10
+
+glance --> GIves similar output to TOP
+================================================
+mv healthcheck.log healthcheck.log.`date +%d%b%y:%T`
+
+================= recompile objects ===========
+
+ELECT COUNT(*) FROM obj$ WHERE status IN (4, 5, 6);
+SELECT COUNT(*) FROM UTL_RECOMP_COMPILED;
+SELECT job_name FROM dba_scheduler_jobs WHERE job_name like 'UTL_RECOMP_SLAVE_%';
+
+SELECT job_name FROM dba_scheduler_running_jobs WHERE job_name like 'UTL_RECOMP_SLAVE_%';
+=========================
+
+analyze table is old fashioned and is resource intesive based on options we use. Please see below link
+https://clairehu.com/2012/07/24/improve-database-performance-by-analyzing-tables/
+================================================
+
+Connect to multiple databases:
+
+#!/bin/bash
+cat service_names.txt | while read line
+do
+sqlplus -s username/password@$line @/u01/scripts/script.sql
+done
+
+==============================================
+
+yum history info 20 > /tmp/up1
+-bash-4.1# grep -i kmod /tmp/up1
+    Updated kmod-oracleasm-2.0.8-5.el6_7.x86_64 @rhel-x86_64-server-6
+-bash-4.1#
+
+----------------===========================
+Undo Usage by session:
+
+select s.sid,
+        s.username,
+        sum(ss.value) / 1024 / 1024 as undo_size_mb
+from v$sesstat ss
+   join v$session s on s.sid = ss.sid
+   join v$statname stat on stat.statistic# = ss.statistic#
+where stat.name = 'undo change vector size'
+and s.type <> 'BACKGROUND'
+and s.username IS NOT NULL
+group by s.sid, s.username;
+
+===========================
+
+select u.tablespace_name tablespace, s.username, u.status, sum(u.bytes)/1024/1024 sum_in_mb, count(u.segment_name) seg_cnts 
+from dba_undo_extents u left join v$transaction t on u.segment_name = '_SYSSMU' || t.xidusn || '$' left join v$session s on t.addr = s.taddr 
+group by u.tablespace_name, s.username, u.status order by 1,2,3;
+
+TABLESPACE                     USERNAME                       STATUS     SUM_IN_MB   SEG_CNTS
+------------------------------ ------------------------------ --------- ---------- ----------
+UNDOSEG                        EMCDU                          EXPIRED            8          1
+UNDOSEG                        EMCDU                          UNEXPIRED    118.125         22
+UNDOSEG                                                       EXPIRED        38980       9262
+UNDOSEG                                                       UNEXPIRED     297.75         64
+
+
+
+================
+
+SELECT d.tablespace_name, round(((NVL(f.bytes,0) + (a.maxbytes - a.bytes))/1048576+ u.exp_space),2)
+as max_free_mb, round(((a.bytes - (NVL(f.bytes,0)+ (1024*1024*u.exp_space)))*100/a.maxbytes),2)
+used_pct FROM   sys.dba_tablespaces d, (select tablespace_name, sum(bytes) bytes,
+sum(greatest(maxbytes,bytes)) maxbytes from sys.dba_data_files group by tablespace_name) a,
+(select tablespace_name, sum(bytes) bytes from sys.dba_free_space group by tablespace_name) f ,
+(select tablespace_name , sum(blocks)*8/(1024)  exp_space from 
+dba_undo_extents where status NOT IN ('ACTIVE','UNEXPIRED')  group by  tablespace_name) u
+WHERE d.tablespace_name = a.tablespace_name(+) AND d.tablespace_name = f.tablespace_name(+)
+AND d.tablespace_name=u.tablespace_name  AND d.contents = 'UNDO' AND u.tablespace_name = (select UPPER(value)
+from v$parameter where name = 'undo_tablespace');
+
+===================================
+
+select sequence# from v$archived_log where &scn between FIRST_CHANGE# and NEXT_CHANGE#-1;
+
+et pages 300 lines 300
+col first_change# for 9,999,999,999
+col next_change# for 9,999,999,999
+
+alter session set nls_date_format='DD-MON-RRRR HH24:MI:SS';
+
+select inst_id,name, thread#, sequence#, status, first_time, next_time, first_change#, next_change# from gv$archived_log where &SCN between first_change# and next_change#;
+
+================
+Export in cluster:
+userid="/ as sysdba"
+DIRECTORY=EXPDP_DRLOWN
+DUMPFILE=expSCROWN_IM3440094%U.dmp
+LOGFILE=expSCROWN_IM3440094.log
+SCHEMAS=SCROWN
+CLUSTER=N
+PARALLE=4
+
+================
+set linesize 500
+col file_name format a50
+col name format a70
+set pages 5000
+select file#,name, substr(name,instr(name,'/',-1)+1) file_name,bytes/1024/1024/1024,creation_time from v$datafile order by 5;
+
+http://arpitagrawaloracle.blogspot.in/2013/09/how-to-quickly-check-that-database-is.html
+select file#,error from v$datafile_header where length(error)>=1; 
+
+http://ermanarslan.blogspot.in/p/core-dba-scripts.html
+
+select start_time,type,timestamp,item,comments,sofar,total from v$recovery_progress;
+
+SELECT MAX(start_time) Recovery_start_Time FROM v$recovery_progress;
+ 
+SELECT item,
+TO_CHAR(sofar)||' '||TO_CHAR(units)||' '|| TO_CHAR(timestamp,'DD-MON-RR HH24:MI:SS') Description
+FROM v$recovery_progress
+WHERE start_time=(SELECT MAX(start_time) FROM v$recovery_progress);
+
+cat apply_rate.sql
+set linesize 200
+col Values for a80
+col Recovery_Start_Time for a30
+ 
+col db new_value v_db noprint
+select name db from v$database;
+ 
+Prompt Start of Recovery for this database: &v_db
+SELECT MAX(start_time) Recovery_start_Time FROM v$recovery_progress;
+ 
+SELECT item,
+TO_CHAR(sofar)||' '||TO_CHAR(units)||' '|| TO_CHAR(timestamp,'DD-MON-RR HH24:MI:SS') Description
+FROM v$recovery_progress
+WHERE start_time=(SELECT MAX(start_time) FROM v$recovery_progress);
+===========================================================
+select * from table(dbms_xplan.display_cursor('58c1ja80dhdv0'));
+select * from table(dbms_xplan.display_awr('58c1ja80dhdv0'));
+ps -eo pmem,pcpu,vsz,pid,comm | sort -k 1 -nr | head -10
+
+ps -eo pcpu,pmem,vsz,pid,comm | sort -k 1 -nr | head -10|awk '{print "'\''"$4"'\'',"}'
+'7780',
+'10074',
+'7704',
+'16822',
+'5848',
+'29667',
+'26069',
+'19284',
+'26571',
+'12139',
+
+ps -eo pcpu,pmem,vsz,pid,comm | sort -k 1 -nr | head -10|awk '{print $4","}'
+7780,
+10074,
+7704,
+26069,
+26571,
+29667,
+16822,
+11788,
+29200,
+304,
+
+=============================================================
+set lines 200
+col OPNAME for a25
+
+Select
+a.sid,
+a.serial#,
+b.status,
+a.opname,
+to_char(a.START_TIME,' dd-Mon-YYYY HH24:mi:ss') START_TIME,
+to_char(a.LAST_UPDATE_TIME,' dd-Mon-YYYY HH24:mi:ss') LAST_UPDATE_TIME,
+a.time_remaining as "Time Remaining Sec" ,
+a.time_remaining/60 as "Time Remaining Min",
+a.time_remaining/60/60 as "Time Remaining HR"
+From v$session_longops a, v$session b
+where a.sid = b.sid
+and a.sid =&sid
+And time_remaining > 0;
+
+COLUMN operation FORMAT a15 
+COLUMN username FORMAT a15 
+COLUMN object FORMAT a25
+
+SELECT a.sid, 
+      a.serial#, 
+      b.username , 
+      opname OPERATION, 
+      target OBJECT, 
+      TRUNC(elapsed_seconds, 5) "ET (s)", 
+      TO_CHAR(start_time, 'HH24:MI:SS') start_time, 
+      ROUND((sofar/totalwork)*100, 2) "COMPLETE (%)" 
+ FROM v$session_longops a, 
+      v$session b 
+WHERE a.sid = b.sid AND 
+     b.username not IN ('SYS', 'SYSTEM') AND 
+     totalwork > 0 
+ORDER BY elapsed_seconds;
+===========================================================
+
+Session details with wait event:
+
+select a.sid, a.serial#, a.status, a.program, b.event,to_char(a.logon_time, 'dd-mon-yy hh24:mi') LOGON_TIME,
+to_char(Sysdate, 'dd-mon-yy--hh24:mi') CURRENT_TIME, (a.last_call_et/3600) "Hrs connected" from v$session a,
+v$session_wait b where a.sid in(&SIDs) and a.sid=b.sid;
+
+============== Resumable ======================
+select sid,status,RESUME_TIME,name from v$resumable;
+
+
+Session long ops details:p
+select SID,SERIAL#,OPNAME,SOFAR,TOTALWORK,START_TIME,LAST_UPDATE_TIME,username from
+v$session_longops where sid=&SID and serial#=&SERIAL
+==============================================================
+SELECT A.INST_ID,
+         A.SID,
+         B.MODULE,
+         A.SEQ#,
+         A.EVENT,
+         A.P1TEXT,
+         A.P1,
+         A.P1RAW,
+         A.P2TEXT,
+         A.P2,
+         A.P2RAW,
+         A.P3TEXT,
+         A.P3,
+         A.P3RAW,
+         A.WAIT_TIME,
+         A.SECONDS_IN_WAIT,
+         A.STATE,
+         B.SERIAL#,
+         B.USERNAME,
+         B.OSUSER,
+         B.PADDR,
+         B.LOGON_TIME,
+         B.PROCESS,
+         B.SQL_HASH_VALUE,
+         B.SADDR,
+         B.ROW_WAIT_OBJ#,
+         B.ROW_WAIT_FILE#,
+         B.ROW_WAIT_BLOCK#,
+         B.ROW_WAIT_ROW#,
+            'alter system kill session '
+         || ''''
+         || B.SID
+         || ', '
+         || B.SERIAL#
+         || ''''
+         || ' immediate;'
+            KILL_SESSION
+    FROM GV$SESSION_WAIT A, GV$SESSION B
+   WHERE     A.INST_ID = B.INST_ID
+         AND A.SID = B.SID
+         AND B.USERNAME IS NOT NULL
+         AND B.TYPE <> 'BACKGROUND'
+         AND A.EVENT IN
+                ('db file sequential read',
+                 'db file scattered read',
+                 'latch free',
+                 'direct path read',
+                 'direct path write',
+                 'enqueue',
+                 'library cache pin',
+                 'library load lock',
+                 'buffer busy waits',
+                 'latch: cache buffers chains',
+                 'SQL*Net message from dblink',
+                 'free buffer waits',
+                 'cache buffers chains',
+                 'library cache lock',
+                 'global cache open x',
+                 'global cache cr request',
+                 'queue messages')
+ORDER BY A.SECONDS_IN_WAIT DESC;
+=======================================
+Select 'drop '||object_type||' '|| object_name||  DECODE(OBJECT_TYPE,'TABLE',' CASCADE CONSTRAINTS;','')from user_objects
+ 
+ 
+select 'drop '||object_type||' '||owner||'.'||object_name|| DECODE(OBJECT_TYPE,'TABLE',' CASCADE CONSTRAINTS;',';')from dba_objects where owner='OCS_ADMIN'
+ 
+select 'alter system kill session ' || '''' || sid || ',' || serial# || '''' || ' immediate;' from v$session where username='OCS_ADMIN';
+
+select 'alter system kill session ' || '''' || sid || ',' || serial# || ',@'||inst_id|| ''' immediate;' from gv$session where username='PRIMEADMIN' and status='INACTIVE';
+ 
+SELECT 'alter table '||owner||'.'||table_name||' disable constraint '||constraint_name||' cascade;' from dba_constraints where owner='OCS_ADMIN';
+ 
+ 
+select 'alter system kill session '||''''||sid||','||serial#||'''' from v$session where username='OCS_ADMIN';
+ 
+ 
+select 'alter system kill session ' || '''' || sid || ',' || serial# || '''' || ' immediate;' from v$session where username='OCS_ADMIN';
+ 
+SELECT 'alter table '||owner||'.'||table_name||' disable constraint '||constraint_name||' cascade;' from dba_constraints where owner='OCS_ADMIN';
+ 
+select constraint_name from dba_constraints where  owner='OCS_ADMIN';
+ 
+ 
+PS_I_STOPMAP_HISTORY
+ 
+ 
+select count(*),object_type from dba_objects where owner='OCS_ADMIN' group by object_type;
+ 
+select * from v$session where username='OCS_ADMIN';
+ 
+SELECT a.sid, b.spid, a.username, a.osuser
+  FROM v$session a, v$process b
+WHERE a.paddr = b.addr(+) and a.username='OCS_ADMIN';
+
+
+
+select decode(pool,null,name,pool),round(sum(bytes)/1024/1024,4) MB from v$sgastat group by decode(pool,null,name,pool) order by 2 desc;
+
+Select POOL, Round(bytes/1024/1024,0) Free_Memory_In_MB
+  From V$sgastat
+    Where Name Like '%free memory%';
+
+SELECT TO_CHAR(s.sid)||','||TO_CHAR(s.serial#) sid_serial,
+NVL(s.username, 'None') orauser,
+s.program,
+r.name undoseg,
+t.used_ublk * TO_NUMBER(x.value)/1024/1024/1024||'G' "Undo"
+FROM sys.v_$rollname r,
+sys.v_$session s,
+sys.v_$transaction t,
+sys.v_$parameter x
+ WHERE s.taddr = t.addr
+ AND r.usn = t.xidusn(+)
+ AND x.name = 'db_block_size';
+ 
+ select tablespace_name tablespace, status, sum(bytes)/1024/1024 sum_in_mb, count(*) counts from dba_undo_extents group by tablespace_name, status order by 1,2;
+ 
+ select s.sid,
+        s.username,
+        sum(ss.value) / 1024 / 1024 as undo_size_mb
+from v$sesstat ss
+   join v$session s on s.sid = ss.sid
+   join v$statname stat on stat.statistic# = ss.statistic#
+where stat.name = 'undo change vector size'
+and s.type <> 'BACKGROUND'
+and s.username IS NOT NULL
+group by s.sid, s.username;
+
+ col segment_name format a30 head "Segment Name"
+ col "ACT BYTES" format 999,999,999,999 head "Active Bytes"
+ col "UNEXP BYTES" format 999,999,999,999 head "Unexpired Bytes"
+ col "EXP BYTES" format 999,999,999,999 head "Expired Bytes"
+ 
+ select segment_name, nvl(sum(act),0) "ACT BYTES",
+    nvl(sum(unexp),0) "UNEXP BYTES",
+    nvl(sum(exp),0) "EXP BYTES"
+    from (select segment_name, nvl(sum(bytes),0) act,00 unexp, 00 exp
+    from dba_undo_extents where status='ACTIVE' group by segment_name
+    union
+    select segment_name, 00 act, nvl(sum(bytes),0) unexp, 00 exp
+    from dba_undo_extents where status='UNEXPIRED' group by segment_name
+    union
+   select segment_name, 00 act, 00 unexp, nvl(sum(bytes),0) exp
+   from dba_undo_extents where status='EXPIRED' group by segment_name)
+   group by segment_name
+   order by 1
+   /
+
+alter session db_file_multiblock_read_count=512;
+
+ALTER INDEX "PRDDOWN"."D_1F01AA0580001116" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA0580000010" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA0580001116" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA0580001116" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA0580001116" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+
+spool off;
+[edmsprodb3|EDMS_PROD] $ more index_rebuild_n.sql
+spool index_rebuild.log
+set echo on;
+set time on;
+set timing on;
+
+alter session set db_file_multiblock_read_count=512;
+
+ALTER INDEX "PRDDOWN"."D_1F01AA058000003C" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA058000005D" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+ALTER INDEX "PRDDOWN"."D_1F01AA058000000F" REBUILD ONLINE TABLESPACE TS_INDEX PARALLEL 16 NOLOGGING;
+
+CREATE INDEX PRDDOWN.IDX_CUST_DOC_2 ON PRDDOWN.DU_CUSTOMER_DOCUMENT_S (r_object_id, du_received_date) nologging parallel 8;
+CREATE INDEX PRDDOWN.IDX_DMI_PACKAGE_R_ID ON PRDDOWN.DMI_PACKAGE_R (r_component_id) nologging parallel 8;
+alter index PRDDOWN.IDX_CUST_DOC_2 logging;
+alter index PRDDOWN.IDX_CUST_DOC_2 noparallel;
+alter index PRDDOWN.IDX_DMI_PACKAGE_R_ID logging;
+alter index PRDDOWN.IDX_DMI_PACKAGE_R_ID noprallel;
+execute dbms_stats.unlock_table_stats('PRDDOWN','DU_CUSTOMER_DOCUMENT_S');
+execute dbms_stats.gather_table_stats(ownname => 'PRDDOWN',tabname => 'DU_CUSTOMER_DOCUMENT_S',ESTIMATE_PERCENT=>20,method_opt => 'for all columns size auto',CASCADE=>TRUE,DEGREE => 10);
+execute dbms_stats.lock_table_stats('PRDDOWN','DU_CUSTOMER_DOCUMENT_S');
+execute dbms_stats.gather_table_stats(ownname => 'PRDDOWN',tabname => 'DMI_PACKAGE_R',ESTIMATE_PERCENT=>20,method_opt => 'for all columns size auto'
+,CASCADE=>TRUE,DEGREE => 10);
+spool off;
+
+=====================================
+Speeding up gathering statistics a bit in 11g.
+
+Something about running statistics. Got quite a large database of a few TB (datawarehouse), and was curious how fast the statistics are running, and if I could speed it up a little.  Database: 11g release 1.
+
+First of all, the standard gathering of the statistics of a test_user:
+exec dbms_stats.gather_schema_stats(‘DWH_USER_TEST’,DBMS_STATS.AUTO_SAMPLE_SIZE);
+
+This lasted about 8 hours.
+
+The machine has got 2 quad core-cpu’s at his disposal, so this must and can be used. It must be said by the way that the ‘degree’ of the tables are 1 (migrated tables from 8i). So that’s why it lasted that long.
+
+I put the degree-preference on the schema (you can put this preference on several levels in 11g nowadays):
+– exec dbms_stats.set_schema_prefs(‘DWH_USER_TEST’, ‘DEGREE’,’6');
+
+Ran the statistics:
+
+– exec dbms_stats.gather_schema_stats(‘DWH_USER_TEST’,DBMS_STATS.AUTO_SAMPLE_SIZE,method_opt => ‘for all columns size auto’,degree => DBMS_STATS.DEFAULT_DEGREE);
+
+This lasted 1 hour!
+
+Is there a penalty? Yes, a bit: the machine had an average load of 14 ,  which is reasonably busy, so we have to run this definitely during the night, and beware of scheduled batches of the users. Or put the degree lower…. Anyway, it’s important to keep control over the time when it is running.
+The number of processes I counted were 14 at the time it ran, which also depends on the parameter ‘parallel_threads_per_cpu’, which is now 2 at our database. So : apparently 6 x 2=12 slaves + his own processes.
+
+Now this was only a test-user. The production user is more as 10 times as big. The statistics of this user has been gathered in 2 days and 15 hours in the old fashioned way.  Put a degree of 5  on the schema, and ran it again: 10 hours and 10 minutes… Still quite a lot, but now I just need a night to accomplish the task.
+
+Nice readable resources to read regarding this subject:
+
+=========================================
+
+
+SELECT component,
+                         to_char(start_time,'dd/mm hh24:mi') AS oper_start_time,
+                         oper_type,
+                         initial_size / (1024 * 1024) AS initial_size_mb,
+                         final_size / (1024 * 1024) AS final_size_mb,
+                         initial_size / (1024 * 1024) - final_size / (1024 * 1024) AS diff
+        FROM dba_hist_memory_resize_ops
+ WHERE start_time > SYSDATE - 7
+ ORDER BY component, start_time;
+
+ 
+ 
+ select
+   round(sofar/totalwork*100,2)  percent_completed, 
+   sid,serial#,opname 
+from 
+   v$session_longops 
+where
+   sofar <> totalwork 
+order by
+   target, 
+   sid;
+   
+   
+   https://bharatikunal.wordpress.com/2010/10/20/scp-as-a-background-process/
+   
+   
+   SELECT s.SID,s.serial#,p.SPID, s.CLIENT_INFO,logon_time FROM v$PROCESS p,v$SESSION s WHERE p.ADDR = s.PADDR AND CLIENT_INFO LIKE 'rman%';
+
+select s.inst_id,s.sid,s.serial#,s.username,s.status,s.sql_id,p.spid,last_call_et/60/60 from gv$session s,v$process p where s.paddr=p.addr and s.sid=&sid;
+
+COLUMN EVENT FORMAT a10
+COLUMN SECONDS_IN_WAIT FORMAT 999
+COLUMN STATE FORMAT a20
+COLUMN CLIENT_INFO FORMAT a30
+
+SELECT p.SPID, s.EVENT, s.SECONDS_IN_WAIT AS SEC_WAIT, 
+       sw.STATE, CLIENT_INFO
+FROM V$SESSION_WAIT sw, V$SESSION s, V$PROCESS p
+WHERE sw.EVENT LIKE 'sbt%'
+       AND s.SID=sw.SID
+       AND s.PADDR=p.ADDR
+;
+
+
+
+Select
+a.sid,
+a.serial#,
+b.status,
+a.opname,
+to_char(a.START_TIME,' dd-Mon-YYYY HH24:mi:ss') START_TIME,
+to_char(a.LAST_UPDATE_TIME,' dd-Mon-YYYY HH24:mi:ss') LAST_UPDATE_TIME,
+a.time_remaining as "Time Remaining Sec" ,
+a.time_remaining/60 as "Time Remaining Min",
+a.time_remaining/60/60 as "Time Remaining HR"
+From v$session_longops a, v$session b
+where a.sid = b.sid
+and a.sid =1209
+And time_remaining > 0;
+
+
+
+
+SET lines 132 pages 66 feedback off
+COLUMN tablespace_name        format a15             heading 'Tablespace|(TBS)|Name'
+COLUMN autoextensible         format a6              heading 'Can|Auto|Extend'
+COLUMN files_in_tablespace    format 999             heading 'Files|In|TBS'
+COLUMN total_tablespace_space format 99,999,999,999 heading 'Total|Current|TBS|Space'
+COLUMN total_used_space       format 99,999,999,999 heading 'Total|Current|Used|Space'
+COLUMN total_tablespace_free_space format 99,999,999,999 heading 'Total|Current|Free|Space'
+COLUMN total_used_pct              format 999.99      heading 'Total|Current|Used|PCT'
+COLUMN total_free_pct              format 999.99      heading 'Total|Current|Free|PCT'
+COLUMN max_size_of_tablespace      format 99,999,999,999 heading 'TBS|Max|Size'
+COLUMN total_auto_used_pct         format 999.99      heading 'Total|Max|Used|PCT'
+COLUMN total_auto_free_pct         format 999.99      heading 'Total|Max|Free|PCT'
+
+TTITLE left _date center Tablespace Space Utilization Status Report skip 2
+
+WITH tbs_auto AS
+     (SELECT DISTINCT tablespace_name, autoextensible
+                 FROM dba_data_files
+                WHERE autoextensible = 'YES'),
+     files AS
+     (SELECT   tablespace_name, COUNT (*) tbs_files,
+               SUM (BYTES) total_tbs_bytes
+          FROM dba_data_files
+      GROUP BY tablespace_name),
+     fragments AS
+     (SELECT   tablespace_name, COUNT (*) tbs_fragments,
+               SUM (BYTES) total_tbs_free_bytes,
+               MAX (BYTES) max_free_chunk_bytes
+          FROM dba_free_space
+      GROUP BY tablespace_name),
+     AUTOEXTEND AS
+     (SELECT   tablespace_name, SUM (size_to_grow) total_growth_tbs
+          FROM (SELECT   tablespace_name, SUM (maxbytes) size_to_grow
+                    FROM dba_data_files
+                   WHERE autoextensible = 'YES'
+                GROUP BY tablespace_name
+                UNION
+                SELECT   tablespace_name, SUM (BYTES) size_to_grow
+                    FROM dba_data_files
+                   WHERE autoextensible = 'NO'
+                GROUP BY tablespace_name)
+      GROUP BY tablespace_name)
+SELECT a.tablespace_name,
+       CASE tbs_auto.autoextensible
+          WHEN 'YES'
+             THEN 'YES'
+          ELSE 'NO'
+       END AS autoextensible,
+       files.tbs_files files_in_tablespace,
+       files.total_tbs_bytes total_tablespace_space,
+       (files.total_tbs_bytes - fragments.total_tbs_free_bytes
+       ) total_used_space,
+       fragments.total_tbs_free_bytes total_tablespace_free_space,
+       (  (  (files.total_tbs_bytes - fragments.total_tbs_free_bytes)
+           / files.total_tbs_bytes
+          )
+        * 100
+       ) total_used_pct,
+       ((fragments.total_tbs_free_bytes / files.total_tbs_bytes) * 100
+       ) total_free_pct,
+       AUTOEXTEND.total_growth_tbs max_size_of_tablespace,
+       (  (  (  AUTOEXTEND.total_growth_tbs
+              - (AUTOEXTEND.total_growth_tbs - fragments.total_tbs_free_bytes
+                )
+             )
+           / AUTOEXTEND.total_growth_tbs
+          )
+        * 100
+       ) total_auto_used_pct,
+       (  (  (AUTOEXTEND.total_growth_tbs - fragments.total_tbs_free_bytes)
+           / AUTOEXTEND.total_growth_tbs
+          )
+        * 100
+       ) total_auto_free_pct
+  FROM dba_tablespaces a, files, fragments, AUTOEXTEND, tbs_auto
+ WHERE a.tablespace_name = files.tablespace_name
+   AND a.tablespace_name = fragments.tablespace_name
+   AND a.tablespace_name = AUTOEXTEND.tablespace_name
+   AND a.tablespace_name = tbs_auto.tablespace_name(+);
+   
+   http://lefterhs.blogspot.in/2012/07/tablespace-growth-and-usage-monitoring.html --> KRA
+   
+   
+   =======
+   SELECT TO_CHAR (sp.begin_interval_time,'DD-MM-YYYY') days 
+, ts.tsname
+, max(round((tsu.tablespace_size* dt.block_size )/(1024*1024),2) ) cur_size_MB
+, max(round((tsu.tablespace_usedsize* dt.block_size )/(1024*1024),2)) usedsize_MB 
+FROM DBA_HIST_TBSPC_SPACE_USAGE tsu
+, DBA_HIST_TABLESPACE_STAT ts 
+, DBA_HIST_SNAPSHOT sp
+, DBA_TABLESPACES dt
+WHERE tsu.tablespace_id= ts.ts#
+AND tsu.snap_id = sp.snap_id
+AND ts.tsname = dt.tablespace_name
+AND ts.tsname NOT IN ('SYSAUX','SYSTEM')
+GROUP BY TO_CHAR (sp.begin_interval_time,'DD-MM-YYYY'), ts.tsname 
+ORDER BY ts.tsname, days;
+   
+    select file_name,bytes/1024/1024/1024,autoextensible,tablespace_name from dba_data_files where tablespace_name in ('SOE','SCR_DATA') order by tablespace_name;
+	                                                                                                                          
+	select name,type,total_mb,free_mb,usable_file_mb from v$asm_diskgroup;
+
+	
+	select distinct sql_id,plan_hash_value,to_char(timestamp,'dd-mm-yyyy,hh24:mi:ss')time from dba_hist_sql_plan where sql_id = 'fsnnnf26jfabv'
+	
+	select 'alter system kill session '||''''||sid||','||serial#||''''|| 'immediate;' from v$session where username = 'SADMIN' and status='INACTIVE' and
+logon_time between to_date ('04-FEB-16, 00:00:00','DD-MON-YY,hh24:mi:ss')
+and to_date ('04-FEB-16,23:59:00','DD-MON-YY,hh24:mi:ss');
+/
+
+
+======= User creation ddl =======
+set long 20000 longchunksize 20000 pagesize 0 linesize 1000 feedback off verify off trimspool on
+column ddl format a1000
+
+begin
+   dbms_metadata.set_transform_param (dbms_metadata.session_transform, 'SQLTERMINATOR', true);
+   dbms_metadata.set_transform_param (dbms_metadata.session_transform, 'PRETTY', true);
+end;
+/
+ 
+variable v_username VARCHAR2(30);
+
+exec:v_username := upper('&1');
+
+select dbms_metadata.get_ddl('USER', u.username) AS ddl
+from   dba_users u
+where  u.username = :v_username
+union all
+select dbms_metadata.get_granted_ddl('TABLESPACE_QUOTA', tq.username) AS ddl
+from   dba_ts_quotas tq
+where  tq.username = :v_username
+and    rownum = 1
+union all
+select dbms_metadata.get_granted_ddl('ROLE_GRANT', rp.grantee) AS ddl
+from   dba_role_privs rp
+where  rp.grantee = :v_username
+and    rownum = 1
+union all
+select dbms_metadata.get_granted_ddl('SYSTEM_GRANT', sp.grantee) AS ddl
+from   dba_sys_privs sp
+where  sp.grantee = :v_username
+and    rownum = 1
+union all
+select dbms_metadata.get_granted_ddl('OBJECT_GRANT', tp.grantee) AS ddl
+from   dba_tab_privs tp
+where  tp.grantee = :v_username
+and    rownum = 1
+union all
+select dbms_metadata.get_granted_ddl('DEFAULT_ROLE', rp.grantee) AS ddl
+from   dba_role_privs rp
+where  rp.grantee = :v_username
+and    rp.default_role = 'YES'
+and    rownum = 1
+union all
+select to_clob('/* Start profile creation script in case they are missing') AS ddl
+from   dba_users u
+where  u.username = :v_username
+and    u.profile <> 'DEFAULT'
+and    rownum = 1
+union all
+select dbms_metadata.get_ddl('PROFILE', u.profile) AS ddl
+from   dba_users u
+where  u.username = :v_username
+and    u.profile <> 'DEFAULT'
+union all
+select to_clob('End profile creation script */') AS ddl
+from   dba_users u
+where  u.username = :v_username
+and    u.profile <> 'DEFAULT'
+and    rownum = 1
+/
+
+set linesize 80 pagesize 14 feedback on trimspool on verify on
+
+=============================
+clear screen
+accept uname prompt 'Enter User Name : '
+accept outfile prompt  ' Output filename : '
+ 
+
+ 
+SET LONG 2000000 PAGESIZE 0 head off verify off feedback off linesize 132
+ 
+SELECT dbms_metadata.get_ddl('USER','&&uname') FROM dual;
+SELECT DBMS_METADATA.GET_GRANTED_DDL('SYSTEM_GRANT','&&uname') from dual;
+SELECT DBMS_METADATA.GET_GRANTED_DDL('ROLE_GRANT','&&uname') from dual;
+SELECT DBMS_METADATA.GET_GRANTED_DDL('OBJECT_GRANT','&&uname') from dual;
+ 
+
+===============================
+==========================
+Redo log switches
+==========================
+
+
+COL DAY FORMAT a15;
+COL HOUR FORMAT a4;
+COL TOTAL FORMAT 999;
+SELECT TO_CHAR(FIRST_TIME,'YYYY-MM-DD') DAY,
+TO_CHAR(FIRST_TIME,'HH24') HOUR,
+COUNT(*) TOTAL
+FROM V$LOG_HISTORY
+GROUP BY TO_CHAR(FIRST_TIME,'YYYY-MM-DD'),TO_CHAR(FIRST_TIME,'HH24')
+ORDER BY TO_CHAR(FIRST_TIME,'YYYY-MM-DD'),TO_CHAR(FIRST_TIME,'HH24')
+ASC;
+
+
+=========================
+Redo log space request
+=========================
+Select Round(e.value/s.value,5) "Redo Log Ratio" 
+From v$sysstat s, v$sysstat e
+Where s.name = 'redo log space requests'
+and e.name = 'redo entries';
+
+This script should return a value less than 5000. Otherwise, we need to increase size of redolog file
+
+=================Redolog switch frequence==============
+SELECT TO_CHAR(FIRST_TIME,'YYYY-MM-DD') DAY,
+TO_CHAR(FIRST_TIME,'HH24') HOUR,
+COUNT(*) TOTAL
+FROM V$LOG_HISTORY
+GROUP BY TO_CHAR(FIRST_TIME,'YYYY-MM-DD'),TO_CHAR(FIRST_TIME,'HH24')
+ORDER BY TO_CHAR(FIRST_TIME,'YYYY-MM-DD'),TO_CHAR(FIRST_TIME,'HH24')
+ASC;
+
+=======================================================
+
+
+
+Queries to check Capture state.
+
+COLUMN CAPTURE_NAME HEADING 'Capture|Name' FORMAT A15
+COLUMN STATE HEADING 'State' FORMAT A27
+COLUMN STATE_CHANGED HEADING 'State|Change Time'
+COLUMN CREATE_MESSAGE HEADING 'Last Message|Create Time'
+
+SELECT CAPTURE_NAME,
+STATE,
+TO_CHAR(STATE_CHANGED_TIME, 'HH24:MI:SS MM/DD/YY') STATE_CHANGED,
+TO_CHAR(CAPTURE_MESSAGE_CREATE_TIME, 'HH24:MI:SS MM/DD/YY') CREATE_MESSAGE
+FROM V$STREAMS_CAPTURE;
+Capture State Last Message
+Name State Change Time Create Time
+--------------- --------------------------- ----------------- -----------------
+PAYMENTEVENT_CA CAPTURING CHANGES 18:21:49 04/07/16 18:21:49 04/07/16
+PTURE
+
+ACTEVENT_CAPTUR CAPTURING CHANGES 18:21:49 04/07/16 18:21:49 04/07/16
+E
+
+
+Apply Latency query 
+
+
+
+COLUMN APPLY_NAME HEADING 'Apply Process|Name' FORMAT A30
+COLUMN 'Latency in Seconds' FORMAT 999999
+COLUMN 'Message Creation' FORMAT A17
+COLUMN 'Apply Time' FORMAT A17
+COLUMN APPLIED_MESSAGE_NUMBER HEADING 'Applied|Message|Number' FORMAT 999999999999999
+
+SELECT APPLY_NAME,
+(APPLY_TIME-APPLIED_MESSAGE_CREATE_TIME)*86400 "Latency in Seconds",
+TO_CHAR(APPLIED_MESSAGE_CREATE_TIME,'HH24:MI:SS MM/DD/YY') 
+"Message Creation",
+TO_CHAR(APPLY_TIME,'HH24:MI:SS MM/DD/YY') "Apply Time",
+APPLIED_MESSAGE_NUMBER 
+FROM DBA_APPLY_PROGRESS;
+
+Applied
+Apply Process Message
+Name Latency in Seconds Message Creation Apply Time Number
+----------------- ------------------ ----------------- ----------------- -----------
+ACTEVENT_APPLY 0 18:22:43 04/07/16 18:22:43 04/07/16 ###########
+PAYMENTEVENT_APPL 1 18:22:38 04/07/16 18:22:39 04/07/16 ###########
+Y
+
+Long running transaction can be detected In the alert log as below.
+
+LOGMINER: End mining logfile: /oraredo01/oradata/BSCSPR/redo04a.log
+Wed Apr 6 23:14:29 2016
+LOGMINER: Begin mining logfile for session 1399 thread 1 sequence 119929, /oraredo01/oradata/BSCSPR/redo01a.log
+Wed Apr 6 23:19:42 2016
+C002: long running txn detected, xid: 0x0281.029.00001f29
+Wed Apr 6 23:29:21 2016
+Thread 1 advanced to log sequence 119930 (LGWR switch)
+Current log# 2 seq# 119930 mem# 0: /oraredo01/oradata/BSCSPR/redo02a.log
+Current log# 2 seq# 119930 mem# 1: /oraredo02/oradata/BSCSPR/redo02b.log
+
+To know the transaction id fromm above xid
+
+Go this link 
+
+http://www.binaryhexconverter.com/hex-to-decimal-converter
+
+give hexadecimal number and click on convert similarly 
+
+0x0281
+029
+00001f29
+
+ 
+
+From hexadecimal number you will get the transaction id from below query
+
+check for long running transaction id
+--------------------------------
+
+prompt
+prompt ++ Current Long Running Transactions ++
+prompt Current transactions open for more than 20 minutes
+prompt
+
+col runlength HEAD 'Txn Open|Minutes' format 9999.99
+col sid HEAD 'Session' format a13
+col xid HEAD 'Transaction|ID' format a18
+col terminal HEAD 'Terminal' format a10
+col program HEAD 'Program' format a27 wrap
+
+select t.inst_id, sid||','||serial# sid,xidusn||'.'||xidslot||'.'||xidsqn xid, (sysdate - start_date )* 1440
+runlength ,terminal,program from gv$transaction t, gv$session s where t.addr=s.taddr
+and (sysdate - start_date) * 1440 > 20;
+
+
+From above transaction id you will get the session 
+
+Select sid,serial#,username,status,event,sql_id,machine,module from gv$session where sid = ;
+
+And inform to application team about the long running query.
+
+
+===============================
+
+Fragmented tablespace
+===============================
+
+SELECT * FROM
+(SELECT
+SUBSTR(TABLE_NAME, 1, 21) TABLE_NAME,
+NUM_ROWS,
+AVG_ROW_LEN ROWLEN,
+BLOCKS,
+ROUND((AVG_ROW_LEN + 1) * NUM_ROWS / 1000000, 0) NET_MB,
+ROUND(BLOCKS * (8000 – 23 * INI_TRANS) *
+(1 – PCT_FREE / 100) / 1000000, 0) GROSS_MB,
+ROUND((BLOCKS * (8000 – 23 * INI_TRANS) * (1 – PCT_FREE / 100) –
+(AVG_ROW_LEN + 1) * NUM_ROWS) / 1000000) "WASTED_MB"
+FROM DBA_TABLES
+WHERE
+NUM_ROWS IS NOT NULL AND
+OWNER LIKE '%OWNER%' AND
+PARTITIONED = 'NO' AND
+(IOT_TYPE != 'IOT' OR IOT_TYPE IS NULL)
+ORDER BY 7 DESC)
+WHERE ROWNUM <=20;
+
+9 Steps to Identify and Remove Table Fragmentation
+In Oracle schema there are tables which has huge difference in actual size (size from User_segments) and expected size from user_tables (Num_rows*avg_row_length (in bytes)). This all is due to fragmentation in the table or stats for table are not updated into user_tables.
+
+Steps to Check and Remove Fragmentation 
+
+1. Gather table states:
+
+To check exact difference in table actual size (user_segments) and stats size (user_tables). The difference between these value will report actual fragmentation to DBA. So, We have to have updated stats on the table stored in user_tables. Check LAST_ANALYZED value for table in user_tables. If this value is recent you can skip this step. Other wise i would suggest to gather table stats to get updated stats.
+
+exec dbms_stats.gather_table_stats('schema_name','table_name');
+
+2. Check for Fragmentation in table:
+
+Below query will show the total size of table with fragmentation, expected without fragmentation and how much % of size we can reclaim after removing table fragmentation. Database Administrator has to provide table_name and schema_name as input to this query.
+
+select owner,table_name,round((blocks*8),2)||'kb' "Fragmented size", round((num_rows*avg_row_len/1024),2)||'kb' "Actual size", round((blocks*8),2)-round((num_rows*avg_row_len/1024),2)||'kb',
+((round((blocks*8),2)-round((num_rows*avg_row_len/1024),2))/round((blocks*8),2))*100 -10 "reclaimable space % " from dba_tables where table_name =' table_Name' AND OWNER LIKE 'schema_name';
+
+Note: This query fetch data from user_tables, so the accuracy of result depends on user_table stats.
+
+If you find reclaimable space % value more than 20% then we can expect fragmentation in the table. Suppose, DBA find 50% reclaimable space by above query, So he can proceed for removing fragmentation.
+
+Ways to Remove Fragmentation:
+
+There are two ways to remove Table fragmentation
+
+a. Export and import the table:- (difficult to implement in production environment)
+b. Move table in to different or same tablespace:- (Depends upon the free space available in the tablespace)
+
+
+Here I am following 2b option by keeping table availability in mind. 
+
+3. Collect status of all the indexes on the table:
+
+We will record Index status at one place, So that we get back them after completion of this exercise,  
+
+ select index_name,status from user_indexes where table_name like 'table_name';
+
+status may be valid or unusable.
+
+4. Move table in to new tablespace:
+
+In this step we will move fragmented table from one tablespace to another tablespace to reclaim fragmented space. Find Current size of you table from user_segments and check if any other tablespace has same free space available. So, that we can move this table to new tablespace. Before this DBA has to enable row movement for table.
+
+alter table table_name enable row movement;
+alter table table_name move tablespace new_tablespace_name;
+
+5. Move table in to old tablespace:
+
+Now, get back table to old tablespaces using below command
+
+alter table table_name move tablespace old_tablespace_name;
+
+If we have as free space available as of table size in same tablespace which contain the table. Then we can replace step 4 and 5 by
+
+alter table table_name enable row movement;
+alter table table_name move ;
+
+6. Rebuild all indexes:
+
+We need to rebuild all the indexes on the table because of move command all the index goes into unusable state.
+
+select index_name from user_indexes where table_name like 'table_name';
+
+Use this command for each index.
+
+alter index index_name rebuild online;
+
+
+7. Cross Check Index Status:
+
+select index_name,status from user_indexes where table_name like 'table_name';
+
+Here, value in status field must be valid.
+
+8. Check Table size:
+
+Now again check table size using and DBA will find reduced size of the table.
+
+select table_name,bytes/(1024*1024*1024) from user_table where table_name='table_name';
+
+If, Remote DBA will again execute query in #2, He will find same result because stats of the table is still old. So He has to collect table status. You can also observe same amount of extra free space in current tablespase which was reclaimed after removing table fragmentation.
+
+9. Gather table states:
+
+exec dbms_stats.gather_table_stats('schema_name','table_name');
+
+Please share you feed back in comments section, if this post helps you.
+You might also like:
+Collect stats for Large Partitioned table
+Statistics space used by SM/OPTSTAT in the SYSAUX tablespace is not reclaimed after purging
+ORA-1653 unable to extend table %s.%s by # in tablespace %s
+
+=====================SCRIPT TO find INdex Fragmentatiion===========
+ANALYZE INDEX &&index_name VALIDATE STRUCTURE; 
+
+COL name         HEADING 'Index Name'          FORMAT a30 
+COL del_lf_rows  HEADING 'Deleted|Leaf Rows'   FORMAT 99999999 
+COL lf_rows_used HEADING 'Used|Leaf Rows'      FORMAT 99999999 
+COL ibadness     HEADING '% Deleted|Leaf Rows' FORMAT 999.99999 
+
+SELECT
+    name
+  , del_lf_rows
+  , lf_rows - del_lf_rows lf_rows_used
+  , TO_CHAR( del_lf_rows /(DECODE(lf_rows,0,0.01,lf_rows))*100,'999.99999') ibadness 
+FROM   index_stats
+/
+======================================================================
+====================================================================
+
+Show locked objects
+
+set lines 100 pages 999
+col username  format a20
+col sess_id  format a10
+col object format a25
+col mode_held format a10
+select oracle_username || ' (' || s.osuser || ')' username
+, s.sid || ',' || s.serial# sess_id
+, owner || '.' || object_name object
+, object_type
+, decode( l.block
+, 0, 'Not Blocking'
+, 1, 'Blocking'
+, 2, 'Global') status
+, decode(v.locked_mode
+, 0, 'None'
+, 1, 'Null'
+, 2, 'Row-S (SS)'
+, 3, 'Row-X (SX)'
+, 4, 'Share'
+, 5, 'S/Row-X (SSX)'
+, 6, 'Exclusive', TO_CHAR(lmode)) mode_held
+from v$locked_object v
+, dba_objects d
+, v$lock l
+, v$session s
+where  v.object_id = d.object_id
+and  v.object_id = l.id1
+and  v.session_id = s.sid
+order by oracle_username
+, session_id;
+
+Find Which ROW is locked :
+
+select do.object_name
+, row_wait_obj#
+, row_wait_file#
+, row_wait_block#
+, row_wait_row#
+, dbms_rowid.rowid_create (1, ROW_WAIT_OBJ#, ROW_WAIT_FILE#,
+ROW_WAIT_BLOCK#, ROW_WAIT_ROW#)
+from v$session s
+, dba_objects do
+where sid=&sid
+and  s.ROW_WAIT_OBJ# = do.OBJECT_ID;
+
+List of Locks:
+
+column lock_type format a12
+column mode_held format a10
+column mode_requested format a10
+column blocking_others format a20
+column username format a10
+SELECT session_id
+, lock_type
+, mode_held
+, mode_requested
+, blocking_others
+, lock_id1
+FROM dba_lock l
+WHERE  lock_type NOT IN ('Media Recovery', 'Redo Thread')
+
+SELECT DISTINCT a.sid "BLOCKED", a.serial# "BLOCKEDSERIAL", a.username "BLOCKEDUSER", d.sid "BLOCKEDBYSID",
+d.serial# "BLOCKEDBYSERIAL#", d.username "BLOCKINGUSERNAME"
+from v$session a, dba_objects b, dba_data_files c, v$lock e,
+(SELECT b.sid, b.serial#, b.username, a.id1
+from v$lock a, v$session b where block=1
+and a.sid=b.sid) d
+where a.row_wait_obj#=b.object_id
+and a.row_wait_file#=c.file_id
+and a.lockwait is not null
+and e.id1=d.id1
+and e.block=0 and e.type='TX';
+
+Script to Kill all the locks:
+
+SELECT OS_USER_NAME, ORACLE_USERNAME AS orauser, s.sid, o.object_name,
+o.object_type, s.serial#, a.sql_text
+FROM v$locked_object l, dba_objects o, v$session s, v$sqlarea a
+WHERE l.object_id = o.object_id
+AND s.SQL_ADDRESS = a.address
+AND l.SESSION_ID = s.sid;
+SELECT 'ALTER SYSTEM KILL SESSION "'||TO_CHAR(s.sid)||','||TO_CHAR(s.serial#)||"';'
+AS "Statement to kill"
+FROM v$locked_object l, dba_objects o, v$session s
+WHERE l.object_id = o.object_id
+AND l.SESSION_ID = s.sid;
+
+set head on
+set lin 700
+col module format a20
+
+SELECT s.sid, p.spid "OS Pid", s.module, s.process, s.schemaname "Schema", s.username "Username",
+s.osuser "OS User", s.program "Program", a.sql_id, substr(a.sql_text,1,550) "SQL Text" 
+FROM v$session s, v$sqlarea a, v$process p
+WHERE s.sql_hash_value = a.hash_value (+) 
+AND s.sql_address = a.address (+) 
+AND s.paddr = p.addr
+and s.sid in (select s.sid from v$session s, v$process p where s.paddr = p.addr and p.spid in (16932,16935,16942));
+=============================================
+[crmpred1|CRM_NONPROD] $ cat table_move.sh
+#!/bin/ksh
+set -x
+
+MAIL=/usr/mail/${LOGNAME:?}
+ORACLE_BASE=/oraclerac/app; export ORACLE_BASE
+
+ORACLE_HOME=$ORACLE_BASE/product/11.2.0 ; export ORACLE_HOME
+GRID_HOME=/oraclerac/app/11.2.0/grid; export GRID_HOME
+
+ORACLE_TERM=xterm ; export ORACLE_TERM
+NLS_LANG=AMERICAN_AMERICA.AL32UTF8 ; export NLS_LANG
+ORA_NLS10=$GRID_HOME/nls/data; export ORA_NLS10
+PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$ORACLE_HOME/OPatch:/usr/local/bin:/usr/bin:/usr/openwin/bin:/usr/sbin:/usr/ccs/bin:/usr/sbin:/usr/cluster/bin
+export PATH
+
+CLASSPATH=$ORACLE_HOME/JRE:$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$ORACLE_HOME/network/jlib
+export CLASSPATH
+LD_LIBRARY_PATH=$ORACLE_HOME/lib32;export LD_LIBRARY_PATH
+LD_LIBRARY_PATH_64=$ORACLE_HOME/lib ; export LD_LIBRARY_PATH_64
+#ulimit -n 65532
+
+alias sys='sqlplus "/ as sysdba"'
+alias tns='cd $ORACLE_HOME/network/admin'
+
+ORACLE_SID=sibpr1;export ORACLE_SID
+EDITOR=vi;export EDITOR
+stty erase
+PS1="[`hostname`|CRM_NONPROD] $ ";export PS1
+
+
+sqlplus -s /nolog > /u01/oracle/movement.log <<sqlconn
+connect / as sysdba
+set line 180
+
+set pages 1000 lines 132
+set serveroutput on
+set heading on
+set time on
+spool table_movement.log
+set time on;
+alter table SIEBEL.S_ESCL_REQ move tablespace SIEB_DATA;
+spool off
+[crmpred1|CRM_NONPROD] $ cat table_move_latest.sh
+#!/bin/ksh
+ORACLE_BASE=/oraclerac/app; export ORACLE_BASE
+ORACLE_HOME=$ORACLE_BASE/product/11.2.0; export ORACLE_HOME
+sqlplus -s /nolog << EOL
+conn / as sysdba;
+spool S_ESCL_REQ_move.log
+set time on;
+set timing on;
+select owner,segment_name,segment_type,bytes/1024/1024/1024 from dba_segments where segment_name = 'S_ESCL_REQ'
+/
+select index_name,owner,TABLE_NAME,index_type,status from dba_indexes where table_name = 'S_ESCL_REQ'
+/
+alter table SIEBEL.S_ESCL_REQ move tablespace SIEB_DATA parallel 8 NOLOGGING
+/
+alter table SIEBEL.S_ESCL_REQ logging
+/
+select owner,segment_name,segment_type,bytes/1024/1024/1024 from dba_segments where segment_name = 'S_ESCL_REQ'
+/
+select index_name,owner,TABLE_NAME,index_type,status,tablespace_name from dba_indexes where table_name = 'S_ESCL_REQ'
+/
+alter index SIEBEL.S_ESCL_REQ_U1 rebuild tablespace SIEB_INDEX parallel 8 NOLOGGING
+/
+alter index SIEBEL.S_ESCL_REQ_M1 rebuild tablespace SIEB_INDEX parallel 8 NOLOGGING
+/
+alter index SIEBEL.S_ESCL_REQ_U1 noparallel LOGGING
+/
+alter index SIEBEL.S_ESCL_REQ_M1 noparallel LOGGING
+/
+select index_name,owner,TABLE_NAME,index_type,status,tablespace_name from dba_indexes where table_name = 'S_ESCL_REQ'
+/
+spool off;
+exit;
+EOL
+
+
+=================
+
+select s.sid,s.serial#,s.username,s.status,p.spid from v$session s,v$process p where s.paddr=p.addr and s.username='ICSPRDAPP';
+
+select 'alter system kill session '''||sid||','||serial#||''' immediate;' from v$session where username='ICSPRDAPP' and sid in (1205,1180,1042,582,271);
+
+===================
+
+To set password less authentication:
+
+cd .ssh
+if we have already id_rsa.pub file generated on source, copy this to target server to a temporary location. Do not override the existing id_rsa.pub file on target server.
+On target if we already have .ssh configured, take a copy of authorized_keys.
+cat /tmp/id_rsa.pub >> authorized_keys
+
+nohup scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+if it prompts for password then enter password.
+Then press ctrl + z which will temporarily suspend the command, 
+
+
+SCP will give output:
+[1]+  Stopped   scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+
+
+2>
+then enter the command:
+$ bg
+This will start executing the command in backgroud
+
+
+SCP will give output:
+[1]+ scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+
+
+
+
+3>
+To see what background process that is running you can type command:
+
+
+$ jobs
+SCP will give output:
+[1]+  Running  scp file_to_copy user@server:/path/to/copy/the/file > nohup.out 2>&1
+
+=====================
+Tablespace Freespace Check:
+
+SELECT  a.tablespace_name,
+    ROUND (((c.BYTES - NVL (b.BYTES, 0)) / c.BYTES) * 100,2) percentage_used,
+    c.BYTES / 1024 / 1024 space_allocated,
+    ROUND (c.BYTES / 1024 / 1024 - NVL (b.BYTES, 0) / 1024 / 1024,2) space_used,
+    ROUND (NVL (b.BYTES, 0) / 1024 / 1024, 2) space_free, 
+    c.DATAFILES
+  FROM dba_tablespaces a,
+       (    SELECT   tablespace_name, 
+                  SUM (BYTES) BYTES
+           FROM   dba_free_space
+       GROUP BY   tablespace_name
+       ) b,
+      (    SELECT   COUNT (1) DATAFILES, 
+                  SUM (BYTES) BYTES, 
+                  tablespace_name
+           FROM   dba_data_files
+       GROUP BY   tablespace_name
+    ) c
+  WHERE b.tablespace_name(+) = a.tablespace_name 
+    AND c.tablespace_name(+) = a.tablespace_name
+ORDER BY NVL (((c.BYTES - NVL (b.BYTES, 0)) / c.BYTES), 0) DESC;
+
+------
+
+column "Tablespace" format a25
+column "Used MB"    format 99,999,999
+column "Free MB"    format 99,999,999
+column "Total MB"   format 99,999,999
+select
+   fs.tablespace_name                          "Tablespace",
+   (df.totalspace - fs.freespace)              "Used MB",
+   fs.freespace                                "Free MB",
+   df.totalspace                               "Total MB",
+   round(100 * (fs.freespace / df.totalspace)) "Pct. Free"
+from
+   (select
+      tablespace_name,
+      round(sum(bytes) / 1048576) TotalSpace
+   from
+      dba_data_files
+   group by
+      tablespace_name
+   ) df,
+   (select
+      tablespace_name,
+      round(sum(bytes) / 1048576) FreeSpace
+   from
+      dba_free_space
+   group by
+      tablespace_name
+   ) fs
+where
+   df.tablespace_name = fs.tablespace_name order by 5;
+   
+================ Tablespace Freespace ==============
+
+set feed off
+
+column "tablespace_name" heading "Tablespace | Name" format a40
+column "FileCount" heading "File | Count" format 999999
+column "Size(MB)" heading "Size | (MB)" format 999,999,999.99
+column "Free(MB)" heading "Free | (MB)" format 999,999,999.99
+column "Used(MB)" heading "Used | (MB)" format 999,999,999.99
+column "Max Ext(MB)" heading "Max Ext | (MB)" format 999,999,999
+column "%Free" heading "% | Free" format 999.99
+column "%Free Ext" heading "% | Free Ext" format 999.99
+column "Graph" heading "Graph" format a11
+
+
+
+SELECT 
+   ts.tablespace_name, "File Count",
+   TRUNC("SIZE(MB)", 2) "Size(MB)",
+   TRUNC(fr."FREE(MB)", 2) "Free(MB)",
+   TRUNC("SIZE(MB)" - "FREE(MB)", 2) "Used(MB)",
+   df."MAX_EXT" "Max Ext(MB)",
+   (fr."FREE(MB)" / df."SIZE(MB)") * 100 "% Free",
+   RPAD('*', TRUNC(CEIL((fr."FREE(MB)" / df."SIZE(MB)") * 100)/10), '*')    "Graph"
+FROM 
+   (SELECT tablespace_name,
+   SUM (bytes) / (1024 * 1024) "FREE(MB)"
+   FROM dba_free_space
+    GROUP BY tablespace_name) fr,
+(SELECT tablespace_name, SUM(bytes) / (1024 * 1024) "SIZE(MB)", COUNT(*)
+"File Count", SUM(maxbytes) / (1024 * 1024) "MAX_EXT"
+FROM dba_data_files
+GROUP BY tablespace_name) df,
+(SELECT tablespace_name
+FROM dba_tablespaces) ts
+WHERE fr.tablespace_name = df.tablespace_name (+)
+AND fr.tablespace_name = ts.tablespace_name (+)
+ORDER BY "% Free" desc
+/
+
+prompt
+prompt "The last line shows the Tablespace wich is growing too large..."
+prompt
+
+Tablespace                                Size            Free            Used      Max Ext
+ Name                File Count            (MB)            (MB)            (MB)         (MB)     % Free Graph
+-------------------- ---------- --------------- --------------- --------------- ------------ ---------- -----------
+EAI_INDEX_SMALL              14       41,144.00       41,130.00           14.00            0 99.9659732 **********
+B2B_INDEX                     1        2,048.00        2,043.87            4.12            0  99.798584 **********
+B2B_DATA                     15      159,729.00      154,795.56        4,933.43            0 96.9113702 *********
+UNDOTBS2                      3       71,568.00       60,495.87       11,072.12       72,370  84.529224 ********
+UNDOTBS1                      4       71,680.00       58,006.06       13,673.93       61,440 80.9236363 ********
+TS_REPORTS                    4       22,849.00       17,672.00        5,177.00            0 77.3425533 *******
+USERS                         4        3,572.00        2,719.81          852.18            0 76.1425672 *******
+SYSAUX                        5       38,912.00       24,132.31       14,779.68            0 62.0176616 ******
+EAI_DATA_BIG                 99       11,768.00        5,604.93        6,163.06            0 47.6286327 ****
+SMSAPP_DATA_BIG              22      494,592.00      138,164.00      356,428.00            0 27.9349444 **
+SYSTEM                        7       53,248.00       14,744.31       38,503.68            0 27.6898898 **
+EAI_MESSAGE_DATA_TS         202    5,824,424.00      902,200.93    4,922,223.06            0 15.4899598 *
+EAI_INDEX_BIG_AUTO           56    1,704,940.00      247,326.56    1,457,613.43            0 14.5064672 *
+EAI_TS                       13      258,048.00       37,282.50      220,765.50            0 14.4478934 *
+EAI_DATA_SMALL_AUTO          86    2,611,200.00      177,885.37    2,433,314.62            0 6.81239947
+
+======================
+To get SGA size, you can SQL*Plus statement SHOW SGA or SQL statement:
+select sum(value) from v$sga;
+To get PGA size, you can use:
+select name, value from v$pgastat where name like 'total PGA a%'; 
+
+Moreover use following query to calculate the memory used by the each session.
+
+SELECT to_char(ssn.sid, '9999') || ' - ' || nvl(ssn.username, nvl(bgp.name, 'background')) ||
+nvl(lower(ssn.machine), ins.host_name) "SESSION",
+to_char(prc.spid, '999999999') "PID/THREAD",
+to_char((se1.value/1024)/1024, '999G999G990D00') || ' MB' " CURRENT SIZE",
+to_char((se2.value/1024)/1024, '999G999G990D00') || ' MB' " MAXIMUM SIZE"
+FROM v$sesstat se1, v$sesstat se2, v$session ssn, v$bgprocess bgp, v$process prc,
+v$instance ins, v$statname stat1, v$statname stat2
+WHERE se1.statistic# = stat1.statistic# and stat1.name = 'session pga memory'
+AND se2.statistic# = stat2.statistic# and stat2.name = 'session pga memory max'
+AND se1.sid = ssn.sid
+AND se2.sid = ssn.sid
+AND ssn.paddr = bgp.paddr (+)
+AND ssn.paddr = prc.addr (+);
+====================
+
+
+
+
+set pagesize 25
+set linesize 120
+
+select inst_id, 
+          to_char(begin_time,'MM/DD/YYYY HH24:MI') begin_time, 
+          UNXPSTEALCNT "# Unexpired|Stolen", 
+          EXPSTEALCNT "# Expired|Reused", 
+          SSOLDERRCNT "ORA-1555|Error", 
+          NOSPACEERRCNT "Out-Of-space|Error", 
+          MAXQUERYLEN "Max Query|Length"
+from gv$undostat
+where begin_time between 
+     to_date('01/27/2018 22:00:00','MM/DD/YYYY HH24:MI:SS') 
+and 
+     to_date('01/28/2018 01:00:00','MM/DD/YYYY HH24:MI:SS')
+and ssolderrcnt>0 order by inst_id, begin_time;
+
+
+select stat.inst_id, seg.tablespace_name
+from dba_rollback_segs seg, gv$rollstat stat
+where seg.segment_id = stat.usn
+and seg.segment_name='_SYSSMU57$';
+
+
+============ Optimal Undo required ==========
+
+SELECT d.undo_size/(1024*1024) "ACTUAL UNDO SIZE [MByte]",
+ SUBSTR(e.value,1,25) "UNDO RETENTION [Sec]",
+ ROUND((d.undo_size / (to_number(f.value) *
+ g.undo_block_per_sec))) "OPTIMAL UNDO RETENTION [Sec]"
+ FROM (
+ SELECT SUM(a.bytes) undo_size
+ FROM v$datafile a,
+ v$tablespace b,
+ dba_tablespaces c
+ WHERE c.contents = 'UNDO'
+ AND c.status = 'ONLINE'
+ AND b.name = c.tablespace_name
+ AND a.ts# = b.ts#
+ ) d,
+ v$parameter e,
+ v$parameter f,
+ (
+ SELECT MAX(undoblks/((end_time-begin_time)*3600*24))
+ undo_block_per_sec
+ FROM v$undostat
+ ) g
+WHERE e.name = 'undo_retention'
+ AND f.name = 'db_block_size'
+/
+
+SELECT d.undo_size/(1024*1024) "ACTUAL UNDO SIZE [MByte]",
+ SUBSTR(e.value,1,25) "UNDO RETENTION [Sec]",
+ (TO_NUMBER(e.value) * TO_NUMBER(f.value) *
+ g.undo_block_per_sec) / (1024*1024) 
+ "NEEDED UNDO SIZE [MByte]"
+ FROM (
+ SELECT SUM(a.bytes) undo_size
+ FROM v$datafile a,
+ v$tablespace b,
+ dba_tablespaces c
+ WHERE c.contents = 'UNDO'
+ AND c.status = 'ONLINE'
+ AND b.name = c.tablespace_name
+ AND a.ts# = b.ts#
+ ) d,
+ v$parameter e,
+ v$parameter f,
+ (
+ SELECT MAX(undoblks/((end_time-begin_time)*3600*24))
+ undo_block_per_sec
+ FROM v$undostat
+ ) g
+ WHERE e.name = 'undo_retention'
+ AND f.name = 'db_block_size'
+/
+
+======================================
+https://dbasolutions.wikispaces.com/Troubleshooting+guide+for+Automatic+Undo+Management   ====> Important 
+
+
+
+
+============
+
+set lines 200
+col "Index Operation" for a60 trunc
+col "ETA Mins" format 999.99
+col "Runtime Mins" format 999.99
+select sess.sid as "Session ID", sql.sql_text as "Index Operation",
+longops.totalwork, longops.sofar, 
+longops.elapsed_seconds/60 as "Runtime Mins",
+longops.time_remaining/60 as "ETA Mins"
+from v$session sess, v$sql sql, v$session_longops longops
+where
+sess.sid=longops.sid
+and sess.sql_address = sql.address
+and sess.sql_address = longops.sql_address
+and sess.status  = 'ACTIVE'
+and longops.totalwork > longops.sofar
+and sess.sid not in ( SELECT sys_context('USERENV', 'SID') SID  FROM DUAL)
+and upper(sql.sql_text) like '%INDEX%'
+order by 3, 4
+;
+===============
+
+RMAN backup current progress:
+
+col dbsize_mbytes      for 99,999,990.00 justify right head "DBSIZE_MB"
+col input_mbytes       for 99,999,990.00 justify right head "READ_MB"
+col output_mbytes      for 99,999,990.00 justify right head "WRITTEN_MB"
+col output_device_type for a10           justify left head "DEVICE"
+col complete           for 990.00        justify right head "COMPLETE %" 
+col compression        for 990.00        justify right head "COMPRESS|% ORIG"
+col est_complete       for a20           head "ESTIMATED COMPLETION"
+col recid              for 9999999       head "ID"
+
+select recid
+     , output_device_type
+     , dbsize_mbytes
+     , input_bytes/1024/1024 input_mbytes
+     , output_bytes/1024/1024 output_mbytes
+     , (output_bytes/input_bytes*100) compression
+     , (mbytes_processed/dbsize_mbytes*100) complete
+     , to_char(start_time + (sysdate-start_time)/(mbytes_processed/dbsize_mbytes),'DD-MON-YYYY HH24:MI:SS') est_complete
+  from v$rman_status rs
+     , (select sum(bytes)/1024/1024 dbsize_mbytes from v$datafile) 
+ where status='RUNNING'
+   and output_device_type is not null
+/
+
+=====================
+SELECT SUBSTR (df.NAME, 1, 40) file_name,dfs.tablespace_name, df.bytes / 1024 / 1024 allocated_mb,
+((df.bytes / 1024 / 1024) -  NVL (SUM (dfs.bytes) / 1024 / 1024, 0)) used_mb,
+NVL (SUM (dfs.bytes) / 1024 / 1024, 0) free_space_mb
+FROM v$datafile df, dba_free_space dfs
+WHERE df.file# = dfs.file_id(+)
+GROUP BY dfs.file_id, df.NAME, df.file#, df.bytes,dfs.tablespace_name
+ORDER BY file_name;
+
+
+column empty format a5
+select file_id,
+  'yes' as empty
+from dba_data_files df
+where not exists
+ (select null
+  from dba_extents e
+  where e.tablespace_name = df.tablespace_name
+    and e.file_id = df.file_id);
+
+Shrink datafiles:
+
+SELECT ceil( blocks*(a.BlockSize)/1024/1024) "Current Size",
+   ceil( (nvl(hwm,1)*(a.BlockSize))/1024/1024 ) "Smallest Poss.",
+   ceil( blocks*(a.BlockSize)/1024/1024) -
+   ceil( (nvl(hwm,1)*(a.BlockSize))/1024/1024 ) "Savings",
+   'alter database datafile '''|| file_name || ''' resize ' || 
+      ceil((nvl(hwm,1)*(a.BlockSize))/1024/1024/100)*100  || 'm;' "Command"
+FROM (SELECT a.*, p.value BlockSize FROM dba_data_files a 
+JOIN v$parameter p ON p.Name='db_block_size') a
+LEFT JOIN (SELECT file_id, max(block_id+blocks-1) hwm FROM dba_extents GROUP BY file_id ) b
+ON a.file_id = b.file_id
+WHERE ceil( blocks*(a.BlockSize)/1024/1024) - ceil( (nvl(hwm,1)*(a.BlockSize))/1024/1024 ) 
+   > 100 /* Minimum MB it must shrink by to be considered. */
+ORDER BY "Savings" Desc;
+
+set verify off
+set linesize 400
+column file_name format a60 word_wrapped
+col tablespace_name for a30
+column smallest format 999,990 heading "Smallest|Size|Poss."
+column currsize format 999,990 heading "Current|Size"
+column savings  format 999,990 heading "Poss.|Savings"
+break on report
+compute sum of savings on report
+column value new_val blksize
+select value from v$parameter where name = 'db_block_size';
+/
+select file_name,a.file_id,tablespace_name,
+       ceil( (nvl(hwm,1)*&&blksize)/1024/1024/1024 ) smallest,
+       ceil( blocks*&&blksize/1024/1024/1024) currsize,
+       ceil( blocks*&&blksize/1024/1024/1024) -
+       ceil( (nvl(hwm,1)*&&blksize)/1024/1024/1024 ) savings
+from dba_data_files a,
+     ( select file_id, max(block_id+blocks-1) hwm
+         from dba_extents
+        group by file_id ) b
+where a.file_id = b.file_id(+) and ceil( blocks*&&blksize/1024/1024/1024) -
+       ceil( (nvl(hwm,1)*&&blksize)/1024/1024/1024 ) > 5 order by savings desc
+/
+
+
+select
+    file_id,
+    block_id,
+    block_id + blocks - 1   end_block,
+    owner,
+    segment_name,
+    partition_name,
+    segment_type
+from
+    dba_extents
+where
+    tablespace_name = '&m_tablespace'
+union all
+select
+    file_id,
+    block_id,
+    block_id + blocks - 1   end_block,
+    'free'          owner,
+    'free'          segment_name,
+    null            partition_name,
+    null            segment_type
+from
+    dba_free_space
+where
+    tablespace_name = '&m_tablespace'
+order by
+    1,2
+/
+
+set linesize 400
+col tablespace_name format a15
+col file_size format 99999
+col file_name format a50
+col hwm format 99999
+col can_save format 99999
+SELECT tablespace_name, file_name, file_size, hwm, file_size-hwm can_save
+FROM (SELECT /*+ RULE */ ddf.tablespace_name, ddf.file_name file_name,
+ddf.bytes/1048576 file_size,(ebf.maximum + de.blocks-1)*dbs.db_block_size/1048576 hwm
+FROM dba_data_files ddf,(SELECT file_id, MAX(block_id) maximum FROM dba_extents GROUP BY file_id) ebf,dba_extents de,
+(SELECT value db_block_size FROM v$parameter WHERE name='db_block_size') dbs
+WHERE ddf.file_id = ebf.file_id
+AND de.file_id = ebf.file_id
+AND de.block_id = ebf.maximum
+ORDER BY 1,2);
+
+  set linesize 150
+     column tablespace_name format a20 heading 'Tablespace'
+     column sumb format 999,999,999
+     column extents format 9999
+     column bytes format 999,999,999,999
+     column largest format 999,999,999,999
+     column Tot_Size format 999,999,999 Heading 'Total| Size(Mb)'
+     column Tot_Free format 999,999,999 heading 'Total Free(MB)'
+     column Pct_Free format 999.99 heading '% Free'
+     column Chunks_Free format 9999 heading 'No Of Ext.'
+     column Max_Free format 999,999,999 heading 'Max Free(Kb)'
+     set echo off
+     PROMPT  FREE SPACE AVAILABLE IN TABLESPACES
+     select a.tablespace_name,sum(a.tots/1048576) Tot_Size,
+     sum(a.sumb/1048576) Tot_Free,
+     sum(a.sumb)*100/sum(a.tots) Pct_Free,
+     sum(a.largest/1024) Max_Free,sum(a.chunks) Chunks_Free
+     from
+     (
+     select tablespace_name,0 tots,sum(bytes) sumb,
+     max(bytes) largest,count(*) chunks
+     from dba_free_space a
+     group by tablespace_name
+     union
+     select tablespace_name,sum(bytes) tots,0,0,0 from
+      dba_data_files
+     group by tablespace_name) a
+     group by a.tablespace_name
+order by pct_free;
+
+
+------------------ maxshrink.sql ----------------------------- 
+set verify off 
+column file_name format a50 word_wrapped 
+column smallest format 999,990 heading "Smallest|Size|Poss." 
+column currsize format 999,990 heading "Current|Size" 
+column savings format 999,990 heading "Poss.|Savings" 
+break on report 
+compute sum of savings on report 
+
+column value new_val blksize 
+select value from v$parameter where name = 'db_block_size' 
+/ 
+
+select file_name, 
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) smallest, 
+ceil( blocks*&&blksize/1024/1024) currsize, 
+ceil( blocks*&&blksize/1024/1024) - 
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) savings 
+from dba_data_files a, 
+( select file_id, max(block_id+blocks-1) hwm 
+from dba_extents 
+group by file_id ) b 
+where a.file_id = b.file_id(+) 
+/ 
+
+column cmd format a75 word_wrapped 
+
+select 'alter database datafile ''' || file_name || ''' resize ' || 
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) || 'm;' cmd 
+from dba_data_files a, 
+( select file_id, max(block_id+blocks-1) hwm 
+from dba_extents 
+group by file_id ) b 
+where a.file_id = b.file_id(+) 
+and ceil( blocks*&&blksize/1024/1024) - 
+ceil( (nvl(hwm,1)*&&blksize)/1024/1024 ) > 0 
+/ 
+============================================================ 
+
+SET SERVEROUTPUT ON SIZE 1000000
+SET FEEDBACK OFF
+SET TRIMOUT ON
+SET VERIFY OFF
+
+DECLARE
+  l_tablespace_name VARCHAR2(30) := UPPER('&1');
+  l_file_id         VARCHAR2(30) := UPPER('&2');
+
+  CURSOR c_extents IS
+    SELECT owner,
+           segment_name,
+           file_id,
+           block_id AS start_block,
+           block_id + blocks - 1 AS end_block
+    FROM   dba_extents
+    WHERE  tablespace_name = l_tablespace_name
+    AND    file_id = DECODE(l_file_id, 'ALL', file_id, TO_NUMBER(l_file_id))
+    ORDER BY file_id, block_id;
+
+  l_block_size     NUMBER  := 0;
+  l_last_file_id   NUMBER  := 0;
+  l_last_block_id  NUMBER  := 0;
+  l_gaps_only      BOOLEAN := TRUE;
+  l_total_blocks   NUMBER  := 0;
+BEGIN
+  SELECT block_size
+  INTO   l_block_size
+  FROM   dba_tablespaces
+  WHERE  tablespace_name = l_tablespace_name;
+
+  DBMS_OUTPUT.PUT_LINE('Tablespace Block Size (bytes): ' || l_block_size);
+  FOR cur_rec IN c_extents LOOP
+    IF cur_rec.file_id != l_last_file_id THEN
+      l_last_file_id  := cur_rec.file_id;
+      l_last_block_id := cur_rec.start_block - 1;
+    END IF;
+    
+    IF cur_rec.start_block > l_last_block_id + 1 THEN
+      DBMS_OUTPUT.PUT_LINE('*** GAP *** (' || l_last_block_id || ' -> ' || cur_rec.start_block || ')' ||
+        ' FileID=' || cur_rec.file_id ||
+        ' Blocks=' || (cur_rec.start_block-l_last_block_id-1) || 
+        ' Size(MB)=' || ROUND(((cur_rec.start_block-l_last_block_id-1) * l_block_size)/1024/1024,2)
+      );
+      l_total_blocks := l_total_blocks + cur_rec.start_block - l_last_block_id-1;
+    END IF;
+    l_last_block_id := cur_rec.end_block;
+    IF NOT l_gaps_only THEN
+      DBMS_OUTPUT.PUT_LINE(RPAD(cur_rec.owner || '.' || cur_rec.segment_name, 40, ' ') ||
+                           ' (' || cur_rec.start_block || ' -> ' || cur_rec.end_block || ')');
+    END IF;
+  END LOOP;
+  DBMS_OUTPUT.PUT_LINE('Total Gap Blocks: ' || l_total_blocks);
+  DBMS_OUTPUT.PUT_LINE('Total Gap Space (MB): ' || ROUND((l_total_blocks * l_block_size)/1024/1024,2));
+END;
+/
+
+PROMPT
+SET FEEDBACK ON
+
+============================
+
+Redolog switches:
+
+SELECT A.*, Round(A.Count*B.AVG/1024/1024) Daily_average_MB
+ FROM ( SELECT To_Char(First_Time,'YYYY-MM-DD') Day,
+ Count(1) Count,
+ Min(RECID) Min,
+ Max(RECID) Max
+ FROM v$log_history
+ GROUP BY To_Char(First_Time,'YYYY-MM-DD')
+ ORDER BY 1 DESC ) A,
+ ( SELECT Avg(BYTES) AVG,
+ Count(1) Count#,
+ Max(BYTES) Max_Bytes,
+ Min(BYTES) Min_Bytes
+ FROM v$log ) B;
+ ============================
+ 
+ clusterware startup and shutdown
+ 
+ CRM shutdown and start activity.
+
+before shutting down CRM 
+ps -ef|grep tns
+ps -ef|grep pmon
+ps -ef|grep d.bin
+env { and copy the entire output}
+get the count of active and inactive sessions.
+stop the Local listener---> lsnrctl stop 
+stop the instance -----> srvctl stop instance -d SIBPR -i SIBPR2 -o immediate
+stop CRS  -----> $GRID_HOME/bin/crsctl stop crs
+
+In 11gR2, you can start the High Availability Service Daemon (OHASD) and Clusterware stack in a single step (A) or start it in a two step process(B).
+
+(A) To start the OHASD & clusterware stack in a single step, use
+
+$ crsctl start crs
+
+Note that you can start components on the local server only with this.
+
+(B) You can do this in two steps; starting OHASD and then starting Clusterware stack. The advantage of using this method is that, if OHASD is running, you can start the clusterware stack on any node from local node.
+
+You can start OHASD by,
+
+$ crsctl start has
+
+then, you can start the clusterware stack by,
+
+$ crsctl start cluster -all
+
+You need to Shutdown oracle clusterware or CRS as root and run below command on each node in the cluster.
+
+$CRS_HOME/bin/crsctl stop crs
+Please note that using above command will stop Oracle High availability services (OHAS) and Clustware stack in a single command
+
+From 11g R2, you can do this in two stops
+
+1. Stop Clustwerware stack on local node
+
+$CRS_HOME/bin/crsctl stop cluster
+You can stop the clusterware stack on all nodes in the cluster
+
+$CRS_HOME/bin/crsctl stop cluster –all
+Where
+-all Start/Stop clusterware on all nodes
+-n Start/Stop clusterware on particular nodes
+
+2. Stop Oracle High availability service demon on each node in the cluster.
+
+$CRS_HOME/bin/crsctl stop has
+Check the Status of Cluster
+Once all process stopped run the below command to check the status of CRSD,CSSD,EVMD process.
+
+$CRS_HOME/bin/crsctl check crs
+If you see any process failed to stop then you can also use Force option to terminate the processes unconditionally.
+
+$CRS_HOME/bin/crsctl stop crs –all –f
+Start processes in Oracle RAC
+Follow the reverse sequence to start all processes in oracle RAC
+
+$CRS_HOME/bin/crsctl start crs
+$ORACLE_HOME/bin/bin/srvctl start nodeapps -n node
+$ORACLE_HOME/bin/bin/srvctl start asm -n node
+$ORACLE_HOME/bin/srvctl start database -d db_name
+
+========================
+ASM disk information
+set linesize 300
+col path for a40
+select GROUP_NUMBER,name,label,path,header_status,os_mb/1024 "OS In GB",total_mb/1024 "Total In GB" from v$asm_disk order by GROUP_NUMBER,name;
+
+select d.GROUP_NUMBER,dg.name "Group Name",d.name "Disk Name",label,path,header_status,d.os_mb/1024 "OS In GB",d.total_mb/1024 "Total In GB" 
+from v$asm_disk d,v$asm_diskgroup dg where d.group_number = dg.group_number order by d.GROUP_NUMBER,d.name;
+
+ALTER DISKGROUP DATA ADD DISK '/dev/rdsk/emcpower37a' NAME DATA_0012 REBALANCE POWER 5;
+ ALTER DISKGROUP DATA ADD DISK 'ORCL:ORA_DATA07' NAME ORA_DATA07 REBALANCE POWER 5;
+
+ALTER DISKGROUP DATA1 ADD DISK '/dev/rdsk/c1d18s0' NAME DATA_13 REBALANCE POWER 5;
+ 
+alter diskgroup <name> drop disk <disks names> rebalance power <speed number>. 
+Select operation, state, power, est_rate, est_minutes, round((sofar/EST_WORK)*100,2) pct_comp  From v$asm_operation;
+
+select name Diskgroup,round(total_mb/1024,2) "Total_GB",round(free_mb/1024,2) "Free_GB",round(((free_mb/total_mb)*100),2) "Available%" from v$asm_diskgroup;
+select name Diskgroup,round(total_mb/1024,2) "Total_GB",round(free_mb/1024,2) "FREE GB",round(total_mb/1024-free_mb/1024,2) "USED GB" ,round(((free_mb/total_mb)*100),2) "Available%" from v$asm_diskgroup;
+
+
+column path format a60
+col DISK_FILE_PATH format a40;
+set lines 300
+set pages 50
+SELECT   NVL(a.name, '[CANDIDATE]') disk_group_name  , b.path disk_file_path  , b.name disk_file_name  , b.failgroup disk_file_fail_group,round(b.total_MB/1024) total_GB, round(b.free_MB/1024) Free_GB FROM v$asm_diskgroup a RIGHT OUTER JOIN v$asm_disk b 
+USING (group_number)   ORDER BY   a.name,DISK_FILE_NAME;  
+
+
+
+PROVISIONED implies that an additional platform-specific action has been taken by an administrator to make the disk available for Automatic Storage Management.
+For example, on Windows, the administrator used asmtool or asmtoolg to stamp the disk with a header, or on Linux, the administrator used ASMLib to prepare the disk for ASM.
+
+[root@orcldb2 ~]# /etc/init.d/oracleasm querydisk VOL1
+Disk "VOL1" is a valid ASM disk on device [8, 97]
+
+[root@orcldb2 ~]# ls -l /dev | grep 8, | grep 97
+brw-rw----   1 root disk     8,      81 Nov  4 13:02 sdg1
+
+If you are using multi-path, you will need an additional step to map the physical device to the multi-path device, for instance if using EMC Powerpath if you want to map sdf1
+
+
+[root@orclp ~]# /etc/init.d/oracleasm querydisk vol1
+Disk "VOL1" is a valid ASM disk on device [8, 81]
+
+[root@orclp ~]# ls -l /dev | grep 8,| grep 81
+brw-rw----   1 root disk     8,      81 Oct 29 20:42 sdf1
+
+[root@orclp ~]# powermt display dev=all 
+The last step is to check the partition assigned to the emcpower device, ie:
+
+[root@orclp ~]# ls -l /dev/emcpowerg*
+brw-------  1 root root 120, 96 Oct 29 20:41 /dev/emcpowerg
+brw-------  1 root root 120, 97 Nov 15 13:08 /dev/emcpowerg1
+
+The rebalance power can be adjusted dynamically, i.e. during the rebalance. If the rebalance with the default power is ‘too slow’, the power can be increased. How much? To answer that questions, we need to understand the I/O load, the I/O throughput and most importantly the I/O limits the system can take. If we don’t know that, the power can be increased to 5 (with ‘ALTER DISKGROUP … REBALANCE POWER 5;’). We can then check if that makes a difference. Should we go any higher with the rebalance power? Again, as long as we are not adversely impacting the database I/O performance, we can keep increasing the power. But I haven’t seen much improvement beyond power 30. Note that the power can go up to 11 with disk groups with COMPATIBLE.ASM<11.2.0.2 and up to 1024 for disk groups with COMPATIBLE.ASM=>11.2.0.2.
+=========================
+Exporting tables from Multiple schemas with Expdp
+
+userid="/ as sysdba"
+directory=DATAPUMP_DIR
+dumpfile=exp_tables_%U.dmp
+logfile=exp_tables.log
+schemas=(SYSADM,EMCDU,DUADM)
+include=TABLE:"IN ('HS_CONTRACT_PACK','ORDERTRAILER',
+'RATEPLAN','INFO_CUST_CHECK','HS_DEVICE','ORDERHDR_ALL',
+'PRICEGROUP_ALL','HS_CONTRACT_PACK','CONTR_DEVICES',
+'TITLE','CONTR_SERVICES_CAP','COUNTRY',
+'CCONTACT_ALL','MPUSNTAB','CUSTOMER_ALL','MPUUBTAB',
+'DIRECTORY_NUMBER','CONTRACT_ALL','HS_DEVICE_ASSIGN','HS_PACKAGE','ID_TYPE','STORAGE_MEDIUM')"
+parallel=6
+===========================
+
+set pagesize 50
+set linesize 155
+col time form a27
+col snap_inst form a10
+select END_INTERVAL_TIME as TIME,  ss.snap_id || '.' || ss.instance_number as snap_inst,sum(EXECUTIONS_DELTA) sql_execs,  round(sum(ELAPSED_TIME_DELTA)/1000000)
+round(sum(IOWAIT_DELTA)/1000000) IOWAIT,  round(sum(CPU_TIME_DELTA)/1000000) CPU_TIME,  round(sum(CCWAIT_DELTA)/1000000) CCWAIT,  round(sum(APWAIT_DELTA)/1000000) APWAIT, 
+round(sum(BUFFER_GETS_DELTA)/1000) BUFF_GETS_E3,  round(sum(DISK_READS_DELTA)) DISK_READS,  
+sum(DIRECT_WRITES_DELTA) DIRECT_WRITES from DBA_HIST_SQLSTAT sql, DBA_HIST_SNAPSHOT ss where ss.snap_id = sql.snap_id 
+and ss.snap_id >= (select max(snap_id)-10  from DBA_HIST_SNAPSHOT) and ss.instance_number = sql.instance_number group by END_INTERVAL_TIME, ss.snap_id, ss.instance_number order by ss.snap_id, ss.instance_number;
+===========================
+
+To speed up object revalidation:
+
+@?/rdbms/admin/utlprp.sql 4; --> parallel to be based on number of cpu's;
+Also, try considering flush shared_pool if we have any db upgrade or any maintenance activities.
+===========================
+
+============5. Restore Controlfile 
+
+rman
+
+connect target /
+
+connect catalog rman/rman#1234@rbakpr
+
+run
+
+{
+
+CONFIGURE CHANNEL ch1 DEVICE TYPE 'sbt_tape' PARMS 'ENV=(NSR_SERVER=backup-srv2,NSR_CLIENT=meyerplvdb01-bkp)' FORMAT '%d_%U' maxopenfiles 1;
+
+restore controlfile from 'c-4294297588-20160821-01';
+
+}
+
+ 
+
+ 
+
+ 
+
+ 
+
+==========Step 6. Mount database     --- > alter database mount;
+
+ 
+
+ 
+
+==========Step 7 Restore Preview to find SCN
+
+ 
+
+rman
+
+connect target /
+
+{
+
+CONFIGURE CHANNEL ch1 DEVICE TYPE 'sbt_tape' PARMS 'ENV=(NSR_SERVER=backup-srv2,NSR_CLIENT=meyerplvdb01-bkp)' FORMAT '%d_%U' maxopenfiles 1;
+
+restore database preview;
+
+}
+
+ 
+
+nohup rman target / cmdfile=/oracle/restore_priv.rcv log=/oracle/recover_priv.log & 
+
+ 
+
+BS Key  Size       Device Type Elapsed Time Completion Time
+
+------- ---------- ----------- ------------ ---------------
+
+885897  1.11G      SBT_TAPE    00:02:39     21-AUG-16
+
+        BP Key: 885892   Status: AVAILABLE  Compressed: NO  Tag: TAG20160821T042941
+
+        Handle: PROD_ijrdpelm_1_1   Media: KH1DDboost.001
+
+ 
+
+  List of Archived Logs in backup set 885897
+
+  Thrd Seq     Low SCN    Low Time  Next SCN   Next Time
+
+  ---- ------- ---------- --------- ---------- ---------
+
+  1    118330  10943294386157 21-AUG-16 10943295283231 21-AUG-16
+
+validation succeeded for backup piece
+
+Media recovery start SCN is 10943259948916
+
+Recovery must be done beyond SCN 10943295208374 to clear datafile fuzziness    <---- 10943295208374 + 1
+
+validation succeeded for backup piece
+
+Finished restore at 21-AUG-16
+
+ 
+
+ 
+
+===========Step 8 Restore database
+
+ 
+
+connect target /
+
+{
+
+CONFIGURE CHANNEL ch1 DEVICE TYPE 'sbt_tape' PARMS 'ENV=(NSR_SERVER=backup-srv2,NSR_CLIENT=meyerplvdb01-bkp)' FORMAT '%d_%U' maxopenfiles 1;
+
+set until scn '10943295208375';
+
+restore database;
+
+recover database delete archivelog;
+
+}
+=====================
+The parameter settings of production and your environment is different. The difference is getting created because of the parameter "optimizer_index_cost_adj". In your environment this setting is set to 100 but in production the setting is set to 10.
+
+In OLTP systems value of 10 is recommended which is the current setting in production. 
+
+Please find the below log which shows how the difference is getting created because of change in settings.
+
+[bilprodb3|BSCS_PROD_NEW] $ sqlplus "/as sysdba"
+
+SQL*Plus: Release 10.2.0.4.0 - Production on Mon Oct 24 19:46:16 2016
+
+Copyright (c) 1982, 2007, Oracle.  All Rights Reserved.
+
+
+Connected to:
+Oracle Database 10g Enterprise Edition Release 10.2.0.4.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+
+SQL>
+SQL>
+SQL>
+SQL> set lines 200
+SQL> sho parameter optimizer_index_cost_adj
+
+NAME                                 TYPE                             VALUE
+------------------------------------ -------------------------------- ------------------------------
+optimizer_index_cost_adj             integer                          10
+SQL>  explain plan for
+  2   SELECT  GLACODE,  GLATYPE,  GLAACTIVE  FROM GLACCOUNT_ALL  ORDER BY GLACODE;
+
+Explained.
+
+SQL> select * from table(dbms_xplan.display())
+  2  /
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1895513382
+
+-----------------------------------------------------------------------------------------------
+| Id  | Operation                   | Name            | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |                 |    10M|   195M| 14246   (7)| 00:00:09 |
+|   1 |  TABLE ACCESS BY INDEX ROWID| GLACCOUNT_ALL   |    10M|   195M| 14246   (7)| 00:00:09 |
+|   2 |   INDEX FULL SCAN           | PKGLACCOUNT_ALL |    10M|       |  3961  (10)| 00:00:03 |
+-----------------------------------------------------------------------------------------------
+
+9 rows selected.
+
+SQL> alter session set optimizer_index_cost_adj=100;
+
+Session altered.
+
+SQL> explain plan for
+  2  SELECT  GLACODE,  GLATYPE,  GLAACTIVE  FROM GLACCOUNT_ALL  ORDER BY GLACODE;
+
+Explained.
+
+SQL> select * from table(dbms_xplan.display())
+  2  /
+
+PLAN_TABLE_OUTPUT
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1887800129
+
+--------------------------------------------------------------------------------------------
+| Id  | Operation          | Name          | Rows  | Bytes |TempSpc| Cost (%CPU)| Time     |
+--------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT   |               |    10M|   195M|       |   101K (25)| 00:01:00 |
+|   1 |  SORT ORDER BY     |               |    10M|   195M|   627M|   101K (25)| 00:01:00 |
+|   2 |   TABLE ACCESS FULL| GLACCOUNT_ALL |    10M|   195M|       | 23996  (21)| 00:00:15 |
+--------------------------------------------------------------------------------------------
+
+
+===============
+1.      Should not use old method to calculate fragmentation. Should use segment advisor to do this.
+2.      Scripts should be prepared considering the below guidelines.
+a.      Prechecks of object status, Index status, creating backup tables for DBA_OBJECTS & DBA_INDEXES, taking out the degree, logging method & sizing of objects
+b.      Check whether the objects which we are rebuilding has MV's, if there are mviews then target site Mview has to be done complete refresh.
+c.      Should divide the tables and corresponding indexes into sets according to their sizes and criticality. The one with high importance has to be executed first
+d.      DB force logging should be set to off. This will enhance the speed.
+e.      Table & index parallelism should be set according to their sizes. Golden rule : <  20 GB go for parallelism 8, >  20 and <50 go with parallelism 16 , >  50 go with parallelism 32 and should be always in multip
+=============
+Check for table level supplemental logging:
+
+select * from DBA_LOG_GROUPS where table_name = 'S_EVT_ACT_X';  
+
+select * from DBA_LOG_GROUP_COLUMNS where table_name = 'S_EVT_ACT_X';
+=============
+Locks in database: ===BLOCKS in DATABASE========
+select (select username || ' - ' || osuser|| ' - ' || machine from v$session where sid=a.sid) blocker, 
+a.sid || ', ' || 
+(select serial# from v$session where sid=a.sid) sid_serial, 
+' is blocking ' blocking, 
+(select username || ' - ' || osuser from v$session where sid=b.sid) blockee, 
+b.sid || ', ' || 
+(select serial# from v$session where sid=b.sid) sid_serial 
+from v$lock a, v$lock b 
+where a.block = 1 
+and b.request > 0 
+and a.id1 = b.id1 
+and a.id2 = b.id2;
+=============
+prompt "Please Enter The UNIX Process ID"
+set pagesize 50000
+set linesize 30000
+set long 500000
+set head off
+select
+s.username su,s.sid,s.serial#,s.username,s.logon_time,s.status,
+substr(sa.sql_text,1,540) txt
+from v$process p,
+v$session s,
+v$sqlarea sa
+where p.addr=s.paddr
+and s.username is not null
+and s.sql_address=sa.address(+)
+and s.sql_hash_value=sa.hash_value(+)
+and spid=&SPID;
+===============
+
+SELECT NVL (SUM (TIME_WAITED / 1000), 0)
+  FROM SYS.DBA_HIST_ACTIVE_SESS_HISTORY S,
+       SYS.WRH$_SEG_STAT_OBJ SO,
+       SYS.WRM$_SNAPSHOT SN,
+       SYS.OBJ$ OBJ
+ WHERE     SN.SNAP_ID = S.SNAP_ID
+       AND SN.DBID = S.DBID
+       AND SN.BEGIN_INTERVAL_TIME >=
+              (CURRENT_TIMESTAMP - NUMTODSINTERVAL (30, 'day'))
+       AND S.CURRENT_OBJ# = SO.OBJ#
+       AND S.WAIT_CLASS = 'User I/O'
+       AND S.WAIT_TIME = 0
+       AND SO.DATAOBJ# = :B1
+       AND OBJ.OBJ# = SO.OBJ#
+       AND OBJ.DATAOBJ# = SO.DATAOBJ#
+	   
+=================
+Script to report foreign key columns without indexes:
+
+When a foreign key is unindexed, DML on the parent primary key results in a share row exclusive table lock (or share-subexclusive table lock, SSX) on the child table, preventing DML from other transactions against the child table. If the DML affects several rows in the parent table, the lock on the child table is obtained and released immediately for each row in turn. Despite the speed of the lock-release process, this can cause significant amounts of contention on the child table during periods of heavy update/delete activity on the parent table.
+
+When a foreign key is indexed, DML on the parent primary key results in a row share table lock (or subshare table lock, SS) on the child table. This type of lock prevents other transactions from issuing whole table locks on the child table, but does not block DML on either the parent or the child table. Only the rows relating to the parent primary key are locked in the child table.
+
+
+REM LOCATION:   Object Management\Indexes\Reports
+REM FUNCTION:   Report all foreign keys that do not have an index on the child table
+REM TESTED ON:  7.3.3.5, 8.0.4.1, 8.1.5, 8.1.7, 9.0.1, 10.2.0.3, 11.1.0.6
+REM PLATFORM:   non-specific
+REM REQUIRES:   all_cons_columns, all_constraints, all_ind_columns
+REM
+REM  This is a part of the Knowledge Xpert for Oracle Administration library.
+REM  Copyright (C) 2008 Quest Software
+REM  All rights reserved.
+REM
+REM******************** Knowledge Xpert for Oracle Administration ********************
+
+
+SET pages 56 lines 132 feedback off
+TTITLE ' Foreign Constraints and Columns Without an Index on Child Table'
+SELECT      acc.owner
+         || '-> '
+         || acc.constraint_name
+         || '('
+         || acc.column_name
+         || '['
+         || acc.position
+         || '])' "Owner, Name, Column, Position"
+    FROM all_cons_columns acc, all_constraints ac
+   WHERE ac.constraint_name = acc.constraint_name
+     AND ac.constraint_type = 'R'
+     AND (acc.owner, acc.table_name, acc.column_name, acc.position) IN
+               (SELECT acc.owner, acc.table_name, acc.column_name, acc.position
+                  FROM all_cons_columns acc, all_constraints ac
+                 WHERE ac.constraint_name = acc.constraint_name
+                   AND ac.constraint_type = 'R'
+                MINUS
+                SELECT table_owner, table_name, column_name, column_position
+                  FROM all_ind_columns)
+ORDER BY ACC.owner, ACC.constraint_name, ACC.column_name, ACC.position;
+*******
+The following sql takes the owner as input.
+
+The putput row with the "****" identifies that the SNAP_SHOT_HEADER_CQSDTL_REF table is missing an index on the BOM_INFORMATION_KEY column.
+
+SQL > @report_missing_Indexes_on_fko.sql vqa
+
+STATUS       TABLE_NAME                     COLUMNS              COLUMNS_INDEXED
+------------ ------------------------------ -------------------- -------------------------------------------------------------
+ok           BOM_INFORMATION                SNAPSHOT_KEY         SNAPSHOT_KEY, BOM_INFORMATION_KEY, CHLD
+ok           BOM_INFORMATION                SNAPSHOT_KEY         SNAPSHOT_KEY, BOM_INFORMATION_KEY
+ok           BOM_INFORMATION                SNAPSHOT_KEY         SNAPSHOT_KEY, BOM_INFORMATION_KEY, FINISHED_GOOD_NUMBER, CHLD
+ok           BOM_INFORMATION                SNAPSHOT_KEY         SNAPSHOT_KEY, BOM_INFORMATION_KEY, CHLD, SANDBOX_CHILD_ID
+****         SNAP_SHOT_HEADER_CQSDTL_REF    BOM_INFORMATION_KEY
+
+Report_missing_Indexes_on_fko.sql looks like the following:
+set lines 200
+set pages 50
+set wrap off
+column columns format a20 word_wrapped
+column table_name format a30 word_wrapped
+select decode( b.table_name, NULL, '****', 'ok' ) Status, 
+	   a.table_name, a.columns, b.columns columns_indexed
+from 
+( select substr(a.table_name,1,30) table_name, 
+		 substr(a.constraint_name,1,30) constraint_name, 
+	     max(decode(position, 1,     substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 2,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 3,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 4,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 5,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 6,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 7,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 8,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position, 9,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,10,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,11,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,12,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,13,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,14,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,15,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(position,16,', '||substr(column_name,1,30),NULL)) columns
+    from all_cons_columns a, all_constraints b
+   where a.owner=upper('&1')
+     and b.owner=upper('&1')
+     and a.constraint_name = b.constraint_name
+     and b.constraint_type = 'R'
+   group by substr(a.table_name,1,30), substr(a.constraint_name,1,30) ) a, 
+( select substr(table_name,1,30) table_name, substr(index_name,1,30) index_name, 
+	     max(decode(column_position, 1,     substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 2,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 3,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 4,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 5,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 6,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 7,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 8,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position, 9,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,10,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,11,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,12,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,13,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,14,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,15,', '||substr(column_name,1,30),NULL)) || 
+	     max(decode(column_position,16,', '||substr(column_name,1,30),NULL)) columns
+    from all_ind_columns 
+    where TABLE_OWNER=upper('&1')
+   group by substr(table_name,1,30), substr(index_name,1,30) ) b
+where a.table_name = b.table_name (+)
+  and b.columns (+) like a.columns || '%'
+/
+********
+
+
+
+=====================================
+
+RAC 10g Shutdown/startup
+
+In 10g
+stop cluster in local node
+option 1. crsctl stop crs
+ 
+ 
+alternatively
+ 
+option 2. srvctl stop instance
+             srvctl stop asm
+             srvctl stop nodeapps
+             srvctl stop crs
+ 
+same with starting the resources
+ 
+option 1. crsctl start crs
+ 
+alternatively
+ 
+option 2. srvctl start nodeapps
+             srvctl start asm
+             srvctl start instance
+			 
+==============================
+Character set in database:
+ set linesize 300
+col property_value for a40
+
+select name,property_name,property_value from v$database,database_properties where property_name in ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');
+==============================
+crs_stat | awk -F= '/NAME=/{n=$2}/TYPE=/{t=$2}/TARGET=/{g=$2}/STATE=/{s=$2; printf("%-75s%-18s%-15s%-30s\n", n,t,g,s)}'
+
+=============================
+DBA_JOBS:
+SET LINESIZE 152
+SET PAGESIZE 100COLUMN JOB         FORMAT 99,999 HEADING "Job #"
+COLUMN schema_user FORMAT a12    HEADING "Job Owner"
+COLUMN log_user    FORMAT a12    HEADING "Job Exec"
+COLUMN broken      FORMAT a3     HEADING "BKN"
+COLUMN last        FORMAT a17    HEADING "Last Run"
+COLUMN this        FORMAT a17    HEADING "This Run"
+COLUMN next        FORMAT a17    HEADING "Next Run"
+COLUMN time        FORMAT 99,999 HEADING "Time Mins"
+COLUMN what        FORMAT a40    HEADING "Job Action"
+
+select job,       schema_user,
+       log_user,
+       decode(broken,'Y','Yes','N','No','---') "broken",
+       to_char(LAST_DATE,'DD-MON-YYYY HH24:MI') "last",
+       to_char(THIS_DATE,'DD-MON-YYYY HH24:MI') "this",
+       to_char(NEXT_DATE,'DD-MON-YYYY HH24:MI') "next",
+       ROUND(TOTAL_TIME/60,0) "time",
+       substr(what,1,40) "what"
+from dba_jobs
+where substr(what,1,7) !='declare'
+union all
+select job,
+       schema_user,
+       log_user,
+       decode(broken,'Y','Yes','N','No','---') "broken",
+       to_char(LAST_DATE,'DD-MON-YYYY HH24:MI') "last",
+       to_char(THIS_DATE,'DD-MON-YYYY HH24:MI') "this",
+       to_char(NEXT_DATE,'DD-MON-YYYY HH24:MI') "next",
+       ROUND(TOTAL_TIME/60,0) "time",
+       substr(what,instr(what,'MSG'),20) "what"
+from dba_jobs
+where substr(what,1,7) ='declare'
+order by 1
+/
+================================
+select sys_context( 'userenv', 'current_schema' ) from dual;
+================================
+Vi EDITOR
+:set number ---> Dislplays Line numbers
+:8,449d ---> Deletes lines from 8 to 449d
+===============================
+df -h readable output in HPUX
+df -Pk | awk '{ 
+ if ( NR == 1 ) { next } 
+ if ( NF == 6 ) { print } 
+ if ( NF == 5 ) { next } 
+ if ( NF == 1 ) { 
+ getline record; 
+ $0 = $0 record 
+ print $0 
+ } 
+ }' | awk '
+BEGIN {print "Filesystem                                    Mount Point                 Total GB   Avail GB    Used GB  Used"
+       print "--------------------------------------------- ------------------------- ---------- ---------- ---------- -----"}
+END {print ""}
+/dev/ || /^[0-9a-zA-Z.]*:\// {
+printf ("%-45.45s %-25s %10.2f %10.2f %10.2f %4.0f%\n",$1,$6,$2/1024/1024,$4/1024/1024,$3/1024/1024,$5)
+}'
+
+Modified:
+df -Pk | awk '
+BEGIN {print "Filesystem                                    Mount Point                 Total GB   Avail GB    Used GB  Used"
+       print "--------------------------------------------- ------------------------- ---------- ---------- ---------- -----"}
+END {print ""}
+/dev/ || /^[0-9a-zA-Z.]*:\// {
+printf ("%-45.45s %-25s %10.2f %10.2f %10.2f %4.0f%\n",$1,$6,$2/1024/1024,$4/1024/1024,$3/1024/1024,$5)
+}'
+====================================================
+Bug 13042639 - LMS hangs with "SGA: allocation forcing component growth" wait event when auto SGA tuning is enabled ( Doc ID 13042639.8 ) 
+Bug 15901852 - LMS waits too long for 'SGA: allocation forcing component growth' with Flash Cache on ( Doc ID 15901852.8 ) 
+
+High 'library cache lock' Wait Time Due to Invalid Login Attempts ( Doc ID 1309738.1 ) 
+Finding the source of failed login attempts. ( Doc ID 352389.1 ) 
+
+How to Determine the Blocking Session for Event: 'cursor: pin S wait on X' ( Doc ID 786507.1 ) 
+Troubleshooting 'cursor: pin S wait on X' waits. ( Doc ID 1349387.1 ) 
+====================================================
+Failed loginattempts when auditing is enabled:
+select username, os_username, userhost, client_id, trunc(timestamp), count(*) failed_logins 
+from dba_audit_trail 
+where returncode = 1017 
+and timestamp > sysdate - 1 
+group by username, os_username, userhost, client_id, trunc(timestamp); 
+=====================================
+RMAN Block change tracking:
+select file#, avg(datafile_blocks) blocks,
+avg(blocks_read) blocks_read,
+avg(blocks_read/datafile_blocks)*100 pct_read,
+avg(blocks) blocks_backed_up,
+(avg(blocks)/avg(datafile_blocks))*100 pct_backed_up
+from v$backup_datafile
+where incremental_level = 1
+group by file# order by file#;
+
+
+So far we have seen how to implement, interpreting and few validations but the very difficult thing is whether to go with BCT or not?  Well. As I said above this has to be tested and see how it is going to help. Like enable block change tracking and schedule the incremental backups and now it's your job to monitor how many changes per day?
+If it is something 10 to 20% of changes in datafiles then considering BCT makes sense. If suppose there are changes of 50% or 70% then no use of using BCT. To confirm the percentage of changes in each datafiles use the below query.
+ 
+select file#,
+       blocks_changed,
+       block_size,
+       blocks_changed * block_size bytes_changed,
+       round(blocks_changed / blocks * 100, 2) percent_changed
+from v$datafile join
+     (select fno
+             file#,
+             sum(bct) blocks_changed
+      from (select distinct fno, bno, bct from x$krcbit
+            where vertime >= (select curr_vertime from x$krcfde
+                              where csno=x$krcbit.csno and fno=x$krcbit.fno))
+      group by fno order by 1)
+using(file#);
+
+The single biggest takeway you should get is that just because it is defined, don't get the idea it is going to be there. So, a periodic check for the BCT file is a must. I will work on developing an automated tool to check for non-use of BCT file. The tool will essentially issue:
+
+SELECT count(1) 
+FROM v$backup_datafile
+where USED_CHANGE_TRACKING = 'NO'
+/
+
+If the output is >1, then an alert should be issued.
+
+BCT Overhead:
+Kyle: Vinay, what kind of impact does BCT have on the performance of an Oracle database?
+
+Vinay: After it was introduced in 10gR1, BCT was put through TPCC-style OLTP benchmarks internally at Oracle. There was no measurable performance overhead on OLTP. However, it took a release to stabilize the feature and fix several fundamental bugs: 10.2.0.4 is all right, not so sure about 10.1.
+
+There was some concern because BCT updates to the in-memory bitmap are done in the critical redo generation path by every foreground. The BCT logging turned out to be negligible in terms of CPU (instruction count) because redo generation was an order of magnitude more work. The main issue was bugs that caused the BCT background (CTWR) to get stuck or slow down, to the point where no more in-memory bitmap buffers were available and impacted foreground activity.
+
+BCT for the Physical Standby was added in 11.1, as part of the Active Data Guard licensed option. There were some critical bugs with this feature that were fully resolved only in 11.2, although patches are available for 11.1.0.7.
+
+I have seen BCT deployed successfully at customers with > 20MB/s (50 GB/hr), Oracle’s internal testing was ~50MB/s.
+
+Bottom line, stability of the feature and not performance is the concern. On the primary: 10.2.0.4, 11.1.0.7, 11.2 are solid. On the standby: 11.1.0.7 (+ BCT patches), 11.2.0.1 (+ BCT patches), 11.2.0.2 are best.
+
+Kyle, Thanks and as usual good post. When using BCT with ASM and 11g, we often hit issue during duplicate using RMAN. So, I have seen DBAs disable BCT before RMAN backup for duplicate, and re-enable after the backup. Have you encountered any such issues, and what is the best practice to avoid this error during duplicate?
+Metalink Doc: Bug 10193846 – RMAN duplicate fails with ORA-19755 when BCT file is not accessible [ID 10193846.8]
+The workarounds provided do not seem to work or practical on ASM OMF files.
+Here is the error:
+RMAN-03002: failure of recover command at 04/20/2013 01:41:57
+ORA-00283: recovery session canceled due to errors
+RMAN-11003: failure during parse/execution of SQL statement: alter database recover logfile ‘/backup/OLTPPRD/OLTPPRD/archivelog/1_130134_745341360.dbf’
+ORA-00283: recovery session canceled due to errors
+ORA-19755: could not open change tracking file
+ORA-19750: change tracking file: ‘+PROD_CFD1/oltpprd/changetracking/ctf.330.746741277'
+ORA-17503: ksfdopn:2 Failed to open file +PROD_CFD1/oltpprd/changetracking/ctf.330.746741277
+ORA-15012: ASM file ‘+PROD_CFD1/oltpprd/changetracking/ctf.330.746741277' does not exist
+
+How Block Change Tracking (BCT) Works
+
+When data blocks change, shadow processes track the changed blocks in a private area of memory at the same time they generate redo. When a commit is issued, the BCT information is copied to a shared area in Large Pool called ‘CTWR dba buffer’. At the checkpoint, a new background process, Change Tracking Writer (CTWR), writes the information from the buffer to the change-tracking file. If contention for space in the CTWR dba buffer occurs, a wait event called, ‘Block Change Tracking Buffer Space’ is recorded. Several causes for this wait event are poor I/O performance on the disk where the change-tracking file resides, or the CTWR dba buffer is too small to record the number of concurrent block changes.
+
+By default, the CTWR process is disabled because it can introduce some minimal performance overhead on the database.
+
+When a session waits on the " Block Change Tracking Buffer " event, it indicates that there was a wait for space in the CTRW dba buffer. If this happens too often the performance of Backups and/or the entire database can suffer. There are several alternatives to fixing this if it occurs in your system:
+
+Review the location of the change-tracking file to ensure that it’s not co-located on disks with other heavily used or "HOT" files. For example, do not locate the change-tracking file on the same disk with your redo or archive files.
+Consider changing the value of Large_pool_size or the hidden parameter _bct_public_dba_buffer_size to a larger value.
+Turn off the BCT feature so that it does not require the CTWR dba buffer.
+===============================================
+
+RMAN Backup Restore Progress:
+TTITLE LEFT '% Completed. Aggregate is the overall progress:'
+SET LINE 132
+SELECT opname, round(sofar/totalwork*100) "% Complete"
+  FROM gv$session_longops
+ WHERE opname LIKE 'RMAN%'
+   AND totalwork != 0
+   AND sofar <> totalwork
+ ORDER BY 1;
+ 
+TTITLE LEFT 'Channels waiting:'
+COL client_info FORMAT A15 TRUNC
+COL event FORMAT A20 TRUNC
+COL state FORMAT A7
+COL wait FORMAT 999.90 HEAD "Min waiting"
+SELECT s.sid, p.spid, s.client_info, status, event, state, seconds_in_wait/60 wait
+  FROM gv$process p, gv$session s
+ WHERE p.addr = s.paddr
+   AND client_info LIKE 'rman%';
+   
+TTITLE LEFT 'Files currently being written to:'
+COL filename FORMAT a50
+SELECT filename, bytes, io_count
+  FROM v$backup_async_io
+ WHERE status='IN PROGRESS'
+/
+TTITLE OFF
+SET HEAD OFF
+SELECT 'Throughput: '||
+       ROUND(SUM(v.value/1024/1024/1024),1) || ' Gig so far @ ' ||
+       ROUND(SUM(v.value     /1024/1024)/NVL((SELECT MIN(elapsed_seconds)
+            FROM v$session_longops
+            WHERE opname          LIKE 'RMAN: aggregate input'
+              AND sofar           != TOTALWORK
+              AND elapsed_seconds IS NOT NULL
+       ),SUM(v.value     /1024/1024)),2) || ' Meg/sec'
+ FROM gv$sesstat v, v$statname n, gv$session s
+WHERE v.statistic# = n.statistic#
+  AND n.name       = 'physical write total bytes'
+  AND v.sid        = s.sid
+  AND v.inst_id    = s.inst_id
+  AND s.program LIKE 'rman@%'
+GROUP BY n.name
+/
+SET HEAD ON
+
+Backup Progress Script:
+
+col dbsize_mbytes      for 99,999,990.00 justify right head "DBSIZE_MB"
+col input_mbytes       for 99,999,990.00 justify right head "READ_MB"
+col output_mbytes      for 99,999,990.00 justify right head "WRITTEN_MB"
+col output_device_type for a10           justify left head "DEVICE"
+col complete           for 990.00        justify right head "COMPLETE %" 
+col compression        for 990.00        justify right head "COMPRESS|% ORIG"
+col est_complete       for a20           head "ESTIMATED COMPLETION"
+col recid              for 9999999       head "ID"
+
+select recid
+     , output_device_type
+     , dbsize_mbytes
+     , input_bytes/1024/1024 input_mbytes
+     , output_bytes/1024/1024 output_mbytes
+     , (output_bytes/input_bytes*100) compression
+     , (mbytes_processed/dbsize_mbytes*100) complete
+     , to_char(start_time + (sysdate-start_time)/(mbytes_processed/dbsize_mbytes),'DD-MON-YYYY HH24:MI:SS') est_complete
+  from v$rman_status rs
+     , (select sum(bytes)/1024/1024 dbsize_mbytes from v$datafile) 
+ where status='RUNNING'
+   and output_device_type is not null
+/
+
+Source: http://www.dba-resources.com/oracle/rman-displaying-current-backup-progress/
+
+To see what RMAN is doing now and how much work its got left to do you can run the following SQL
+select
+sid,
+start_time,
+totalwork,
+sofar,
+(sofar/totalwork) * 100 pct_done
+from
+v$session_longops
+where totalwork > sofar
+AND opname NOT LIKE '%aggregate%'
+AND opname like 'RMAN%'
+/
+
+The following query will show you a history of your BACKUP and RESTORE operations
+select to_char(start_time, 'dd-mon-yyyy@hh24:mi:ss') "Date",
+status,
+operation,
+mbytes_processed
+from v$rman_status vs
+where start_time >  sysdate -1
+order by start_time
+/ 
+
+Check status of RMAN backups:
+col STATUS format a9
+col hrs format 999.99
+select
+SESSION_KEY, INPUT_TYPE, STATUS,
+to_char(START_TIME,'mm/dd/yy hh24:mi') start_time,
+to_char(END_TIME,'mm/dd/yy hh24:mi')   end_time,
+elapsed_seconds/3600                   hrs
+from V$RMAN_BACKUP_JOB_DETAILS
+order by session_key;
+
+
+select device_type "Device", type, filename, to_char(open_time, 'mm/dd/yyyy hh24:mi:ss') open,
+to_char(close_time,'mm/dd/yyyy hh24:mi:ss') close,elapsed_time ET, effective_bytes_per_second EPS
+from v$backup_async_io
+where close_time > sysdate - 30
+order by close_time desc;
+
+============ RMAN Restore status================
+select sid,serial,type,status,filename,elapsed_time,EFFECTIVE_BYTES_PER_SECOND from v$backup_sync_io where status ='IN PROGRESS'
+
+
+
+=============================
+SELECT A.INST_ID,
+         A.SID,
+         B.MODULE,
+         A.EVENT,
+         A.WAIT_TIME,
+         A.SECONDS_IN_WAIT,
+         A.STATE,
+         B.SERIAL#,
+         B.USERNAME,
+         B.LOGON_TIME,
+         B.PROCESS,
+         B.SQL_id
+         FROM GV$SESSION_WAIT A, GV$SESSION B
+   WHERE     A.INST_ID = B.INST_ID
+         AND A.SID = B.SID
+         AND B.USERNAME IS NOT NULL
+         AND B.TYPE <> 'BACKGROUND'
+         ORDER BY A.SECONDS_IN_WAIT DESC;
+================================
+SELECT A.INST_ID,
+         A.SID,
+         B.MODULE,
+         A.SEQ#,
+         A.EVENT,
+         A.P1TEXT,
+         A.P1,
+         A.P1RAW,
+         A.P2TEXT,
+         A.P2,
+         A.P2RAW,
+         A.P3TEXT,
+         A.P3,
+         A.P3RAW,
+         A.WAIT_TIME,
+         A.SECONDS_IN_WAIT,
+         A.STATE,
+         B.SERIAL#,
+         B.USERNAME,
+         B.OSUSER,
+         B.PADDR,
+         B.LOGON_TIME,
+         B.PROCESS,
+         B.SQL_HASH_VALUE,
+         B.SADDR,
+         B.ROW_WAIT_OBJ#,
+         B.ROW_WAIT_FILE#,
+         B.ROW_WAIT_BLOCK#
+        FROM GV$SESSION_WAIT A, GV$SESSION B
+   WHERE     A.INST_ID = B.INST_ID
+         AND A.SID = B.SID
+         AND B.USERNAME IS NOT NULL
+         AND B.TYPE <> 'BACKGROUND'
+         ORDER BY A.SECONDS_IN_WAIT DESC;
+================================= Original query is below =========================
+SELECT A.INST_ID,
+         A.SID,
+         B.MODULE,
+         A.SEQ#,
+         A.EVENT,
+         A.P1TEXT,
+         A.P1,
+         A.P1RAW,
+         A.P2TEXT,
+         A.P2,
+         A.P2RAW,
+         A.P3TEXT,
+         A.P3,
+         A.P3RAW,
+         A.WAIT_TIME,
+         A.SECONDS_IN_WAIT,
+         A.STATE,
+         B.SERIAL#,
+         B.USERNAME,
+         B.OSUSER,
+         B.PADDR,
+         B.LOGON_TIME,
+         B.PROCESS,
+         B.SQL_HASH_VALUE,
+         B.SADDR,
+         B.ROW_WAIT_OBJ#,
+         B.ROW_WAIT_FILE#,
+         B.ROW_WAIT_BLOCK#,
+         B.ROW_WAIT_ROW#,
+            'alter system kill session '
+         || ''''
+         || B.SID
+         || ', '
+         || B.SERIAL#
+         || ''''
+         || ' immediate;'
+            KILL_SESSION
+    FROM GV$SESSION_WAIT A, GV$SESSION B
+   WHERE     A.INST_ID = B.INST_ID
+         AND A.SID = B.SID
+         AND B.USERNAME IS NOT NULL
+         AND B.TYPE <> 'BACKGROUND'
+         AND A.EVENT IN
+                ('db file sequential read',
+                 'db file scattered read',
+                 'latch free',
+                 'direct path read',
+                 'direct path write',
+                 'enqueue',
+                 'library cache pin',
+                 'library load lock',
+                 'buffer busy waits',
+                 'latch: cache buffers chains',
+                 'SQL*Net message from dblink',
+                 'free buffer waits',
+                 'cache buffers chains',
+                 'library cache lock',
+                 'global cache open x',
+                 'global cache cr request',
+                 'queue messages')
+ORDER BY A.SECONDS_IN_WAIT DESC;
+========================
+
+set feedback on
+	set head on
+	cle bre
+	col event form a32 trunc head "Event| Waiting For"
+	col p1 form 9999999999999 trunc
+	col p2 form 999999999999 trunc
+	col p3 form 9999999999 trunc
+	col wait_time form 999 trunc head "Last|Wait|Time"
+	col command form a7 trunc head "Command"
+	col state form a10 trunc
+	col sid form 9999 trunc
+
+	select a.sid,substr(b.username,1,10) username,
+		decode(command,0,'None',2,'Insert',3,'Select',
+				6,'Update',7,'Delete',10,'Drop Index',12,'Drop Table',
+				45,'Rollback',47,'PL/SQL',command) command,
+		a.event,a.p1,a.p2,a.p3,a.P1RAW,b.status,b.SQL_HASH_VALUE,b.sql_id
+	from v$session_wait a,V$session b
+	where b.sid=a.sid
+	and (a.sid>10 and a.event not in('SQL*Net message from client',
+					   'SQL*Net message to client')
+	or (a.sid<=10 and a.event not in ('rdbms ipc message','smon timer',
+	   'pmon timer','SQL*Net message from client')))
+	order by decode(event,'pipe get','A',event),p1,p2
+	/
+========================
+select a.sid,substr(b.username,1,10) username,
+    decode(command,0,'None',2,'Insert',3,'Select',
+            6,'Update',7,'Delete',10,'Drop Index',12,'Drop Table',
+            45,'Rollback',47,'PL/SQL',command) command,
+    a.event,a.p1,a.p2,a.p3,a.P1RAW,b.status,b.SQL_HASH_VALUE
+from gv$session_wait a,gV$session b
+where b.sid=a.sid and b.sid like (&sid) 
+order by decode(event,'pipe get','A',event),p1,p2
+/
+======================
+Then to see the parallel execution servers that are dedicated to that session:
+
+SELECT qcsid, qcserial#, SID, serial#, server#, degree FROM gv$px_session pxs WHERE pxs.qcsid = &Sid AND pxs.qcserial# = &Serial;
+======================
+col username for a12
+col module for a10 trunc
+col state for a20
+col "QC SID" for A6
+col SID for a10
+col "QC/Slave" for A10
+col "ReqDOP" for 999
+col "ActDOP" for 999
+col "slave set" for  A10
+col event for a25 trunc
+col action for a20 trunc
+col p1text for a20 trunc
+col secwait for 99999
+col state for a10 trunc
+col object for a25 trunc
+col command for a15 trunc
+set pages 300  lines 300
+select
+     s.inst_id,
+     decode(px.qcinst_id,NULL,s.username,
+           ' - '||lower(substr(s.program,length(s.program)-4,4) ) ) "Username",
+     decode(px.qcinst_id,NULL, 'QC', '(Slave)') "QC/Slave" ,
+     to_char( px.server_set) "Slave Set",
+     to_char(s.sid) "SID",
+     decode(px.qcinst_id, NULL ,to_char(s.sid) ,px.qcsid) "QC SID",
+     px.req_degree "Requested DOP",
+    px.degree "Actual DOP",s.module,s.sql_id,s.event,s.status
+  from
+    gv$px_session px,
+    gv$session s
+  where
+    px.sid=s.sid (+) and
+    px.serial#=s.serial# and
+    px.inst_id = s.inst_id
+ order by 2 desc;
+ 
+ 
+ From the list , you can Kill the sessiosn with QC as these are parent sessions
+ ===================
+ 
+ v$pq_tqstat 
+ 
+ set linesize 120
+set trimspool on
+set pagesize 24
+set arraysize 25
+ 
+column server_type format a11
+column process     format a7
+ 
+break on dfo_number skip 1 on tq_id skip 1 on server_type
+ 
+spool pq_tqstat
+ 
+select
+    dfo_number,
+    tq_id,
+    server_type,
+    process,
+    num_rows,
+    bytes,
+    waits,
+    timeouts,
+    avg_latency,
+    instance
+from
+    v$pq_tqstat
+order by
+    dfo_number,
+    tq_id,
+    server_type desc,
+    process
+;
+================
+SELECT QCSID, SID, INST_ID "Inst", SERVER_GROUP "Group", SERVER_SET "Set",
+  NAME "Stat Name", VALUE
+FROM GV$PX_SESSTAT A, V$STATNAME B
+WHERE A.STATISTIC# = B.STATISTIC# AND NAME LIKE 'PHYSICAL READS'
+  AND VALUE > 0 ORDER BY QCSID, QCINST_ID, SERVER_GROUP, SERVER_SET;
+ ==================
+ SELECT NAME, VALUE FROM GV$SYSSTAT
+WHERE UPPER (NAME) LIKE '%PARALLEL OPERATIONS%'
+OR UPPER (NAME) LIKE '%PARALLELIZED%' OR UPPER (NAME) LIKE '%PX%';
+===================
+SELECT px.SID "SID", p.PID, p.SPID "SPID", px.INST_ID "Inst",
+       px.SERVER_GROUP "Group", px.SERVER_SET "Set",
+       px.DEGREE "Degree", px.REQ_DEGREE "Req Degree", w.event "Wait Event"
+FROM GV$SESSION s, GV$PX_SESSION px, GV$PROCESS p, GV$SESSION_WAIT w
+WHERE s.sid (+) = px.sid AND s.inst_id (+) = px.inst_id AND
+      s.sid = w.sid (+) AND s.inst_id = w.inst_id (+) AND
+      s.paddr = p.addr (+) AND s.inst_id = p.inst_id (+)
+ORDER BY DECODE(px.QCINST_ID,  NULL, px.INST_ID,  px.QCINST_ID), px.QCSID, 
+DECODE(px.SERVER_GROUP, NULL, 0, px.SERVER_GROUP), px.SERVER_SET, px.INST_ID;
+==============
+Query OPatch from sql(From Oracle 12c)
+select xmltransform(dbms_qopatch.get_opatch_install_info, dbms_qopatch.get_opatch_xslt) x from dual;
+SQL> select xmltransform(dbms_qopatch.get_opatch_lsinventory, dbms_qopatch.get_opatch_xslt) X from dual;
+
+==============
+Summary 
+If you want to kill a running job, do it in 3 steps. First find the job's running related session.
+SELECT /*+ RULE */ D.JOB, V.SID, V.SERIAL#, LOG_USER USERNAME, WHAT,
+DECODE(TRUNC(SYSDATE - LOGON_TIME), 0, NULL,
+TRUNC(SYSDATE - LOGON_TIME) || ' Days' || ' + ') ||
+TO_CHAR(TO_DATE(TRUNC(MOD(SYSDATE-LOGON_TIME,1) * 86400), 'SSSSS'), 'HH24:MI:SS') RUNNING,
+D.FAILURES, 'alter system kill session ' || '''' || V.SID || ', ' || V.SERIAL# || '''' || ' immediate;' KILL_SQL
+FROM DBA_JOBS_RUNNING D, V$SESSION V, DBA_JOBS J
+WHERE V.SID = D.SID
+AND D.JOB = J.JOB;
+Second login as the owner of the job and mark it BROKEN
+BEGIN
+ DBMS_JOB.BROKEN(JOB,TRUE);
+END;
+COMMIT;
+Third as sysdba kill the related session
+ALTER SYSTEM KILL SESSION 'SID, SERIAL#' IMMEDIATE;
+Tip : Marking the job as Broken is necessary; otherwise, the job queue process will restart the job as soon as it notices the session has been killed. 
+
+Other links 
+Find if a job is running
+==================
+Standby Sync
+
+SELECT INST_NAME,LOG_ARCHIVED, LOG_APPLIED, TIME_APPLIED, LOG_ARCHIVED - LOG_APPLIED LOG_GAP FROM 
+(SELECT INST_ID, INSTANCE_NAME INST_NAME, HOST_NAME  FROM GV$INSTANCE ORDER BY INST_ID) NAME, 
+(SELECT INST_ID,PROTECTION_MODE, SYNCHRONIZATION_STATUS FROM GV$ARCHIVE_DEST_STATUS WHERE DEST_ID = 2 ORDER BY INST_ID) STAT,
+(SELECT THREAD#, MAX (SEQUENCE#) LOG_ARCHIVED FROM GV$ARCHIVED_LOG WHERE DEST_ID = 1 
+AND ARCHIVED = 'YES' AND RESETLOGS_ID = (SELECT MAX (RESETLOGS_ID) FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 1 
+AND ARCHIVED = 'YES')  GROUP BY THREAD# ORDER BY THREAD#) ARCH, (SELECT   THREAD#,MAX (SEQUENCE#) LOG_APPLIED, 
+TO_CHAR (MAX (COMPLETION_TIME),  'DD-Mon, HH24:MI:SS') TIME_APPLIED FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 2 AND APPLIED = 'YES' 
+AND RESETLOGS_ID = (SELECT MAX (RESETLOGS_ID) FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 1 AND ARCHIVED = 'YES') GROUP BY THREAD#
+ORDER BY THREAD#) APPL WHERE NAME.INST_ID = STAT.INST_ID AND NAME.INST_ID = ARCH.THREAD# AND NAME.INST_ID = APPL.THREAD# 
+/
+=================
+
+FIxed Object stats:
+https://blogs.oracle.com/optimizer/entry/fixed_objects_statistics_and_why
+http://blog.dbi-services.com/how-to-retrieve-previous-table-statistics-using-oracle-dbmsstats/
+http://harvarinder.blogspot.in/2014/03/oracle-how-to-gather-stats-backup-them.html
+https://weidongzhou.wordpress.com/2015/03/15/fixed-table-stats-issue-after-gathering-fixed-object-stats/comment-page-1/
+
+
+conn /as sysdba 
+exec dbms_stats.gather_fixed_objects_stats(); 
+exec dbms_stats.gather_dictionary_stats(); 
+
+Then run the query as below and upload the trace file 
+
+var B1 varchar2(20); 
+exec :B1:='SJCRS$19957309'; 
+
+alter session set tracefile_identifier='SQL_TRACE'; 
+alter session set timed_statistics = true; 
+alter session set statistics_level=all; 
+alter session set max_dump_file_size = unlimited; 
+alter session set events '10046 trace name context forever,level 12'; 
+SELECT NVL(ERROR#, 0), SUBSTR(ADDITIONAL_INFO, 1, 3000) FROM USER_SCHEDULER_JOB_RUN_DETAILS WHERE JOB_NAME = :B1 ORDER BY LOG_ID DESC; 
+alter session set events '10046 trace name context off' 
+
+
+=============
+
+Cpu:
+===
+
+set pages 1000
+set lines 1000
+col OSPID for a06
+col SID for 99999
+set pages 1000
+set lines 1000
+col OSPID for a06
+col SID for 99999
+col SERIAL# for 999999
+col SQL_ID for a14
+col USERNAME for a15
+col PROGRAM for a23
+col MODULE for a18
+col OSUSER for a10
+col MACHINE for a25
+select * from (
+select p.spid "ospid",
+(se.SID),ss.serial#,ss.SQL_ID,ss.username,substr(ss.program,1,22) "program",ss.module,ss.osuser,ss.MACHINE,ss.status,
+se.VALUE/100 cpu_usage_sec
+from
+v$session ss,
+v$sesstat se,
+v$statname sn,
+v$process p
+where
+se.STATISTIC# = sn.STATISTIC#
+and
+NAME like '%CPU used by this session%'
+and
+se.SID = ss.SID
+and ss.username !='SYS' and
+ss.status='ACTIVE'
+and ss.username is not null
+and ss.paddr=p.addr and value > 0
+order by se.VALUE desc);
+
+=================
+Wait Events On session:
+
+set feedback on
+set head on
+cle bre
+col event form a32 trunc head "Event| Waiting For"
+col p1 form 9999999999999 trunc
+col p2 form 999999999999 trunc
+col p3 form 9999999999 trunc
+col wait_time form 999 trunc head "Last|Wait|Time"
+col command form a7 trunc head "Command"
+col state form a10 trunc
+col sid form 9999 trunc
+
+select a.sid,substr(b.username,1,10) username,
+    decode(command,0,'None',2,'Insert',3,'Select',
+            6,'Update',7,'Delete',10,'Drop Index',12,'Drop Table',
+            45,'Rollback',47,'PL/SQL',command) command,
+    a.event,a.p1,a.p2,a.p3,a.P1RAW,b.status,b.SQL_HASH_VALUE
+from v$session_wait a,V$session b
+where b.sid=a.sid
+and (a.sid>10 and a.event not in('SQL*Net message from client',
+                   'SQL*Net message to client')
+or (a.sid<=10 and a.event not in ('rdbms ipc message','smon timer',
+   'pmon timer','SQL*Net message from client')))
+order by decode(event,'pipe get','A',event),p1,p2
+/
+
+========================
+
+Parallel Sessions:
+
+SELECT DECODE(px.qcinst_id,NULL,username, ' - '||LOWER(SUBSTR(pp.SERVER_NAME,
+LENGTH(pp.SERVER_NAME)-4,4) ) )"Username", DECODE(px.qcinst_id,NULL, 'QC', '(Slave)') "QC/Slave" ,
+TO_CHAR( px.server_set) "SlaveSet", s.program, TO_CHAR(s.SID) "SID",
+TO_CHAR(px.inst_id) "Slave INST", DECODE(sw.state,'WAITING', 'WAIT', 'NOT WAIT' ) AS STATE,    
+CASE  sw.state WHEN 'WAITING' THEN SUBSTR(sw.event,1,30) ELSE NULL END AS wait_event ,
+DECODE(px.qcinst_id, NULL ,TO_CHAR(s.SID) ,px.qcsid) "QC SID",
+TO_CHAR(px.qcinst_id) "QC INST", px.req_degree "Req DOP", px.DEGREE "Actual DOP", 
+DECODE(px.server_set,'',s.last_call_et,'') "Elapsed seconds"
+FROM gv$px_session px, gv$session s, gv$px_process pp, gv$session_wait sw
+WHERE px.SID=s.SID (+)
+AND px.serial#=s.serial#(+)
+AND px.inst_id = s.inst_id(+)
+AND px.SID = pp.SID (+)
+AND px.serial#=pp.serial#(+)
+AND sw.SID = s.SID 
+AND sw.inst_id = s.inst_id  
+ORDER BY DECODE(px.QCINST_ID,  NULL, px.INST_ID,  px.QCINST_ID), px.QCSID, 
+DECODE(px.SERVER_GROUP, NULL, 0, px.SERVER_GROUP), px.SERVER_SET, px.INST_ID;
+
+There is one way to find out, database stores statistics for parallel executions.
+SELECT NAME, VALUE, ROUND((RATIO_TO_REPORT(VALUE) OVER ())*100, 2)|| '%' PERC 
+FROM V$SYSSTAT WHERE NAME LIKE 'Parallel%' ORDER BY NAME DESC;
+
+from 11g:
+
+select sql_id, sql_text, px_servers_requested, px_servers_allocated
+from v$sql_monitor
+where px_servers_requested <> px_servers_allocated and sql_id='&sqlid';
+
+
+Works in 10g as well
+select * from V$PX_PROCESS_SYSSTAT;
+Parallel Servers VALUE
+Servers In Use 48
+Servers Available 0
+Servers Highwater 168 <– Max that could ever be allocated
+
+The Highwater will match the parameter PARALLEL_MAX_SERVERS. This value is the max slave processes that can be spawned, but this does not guarantee that there are enough resources to spawn this many slaves, so keep that in mind. the servers in use tell you how many are being utilized currently and available tells you how many can be allocated- which at this time, is 0.
+
+It is important to next see, how much has degradated? Is this the only process or are their others? If your environment utilizes a lot of parallel, it is important to track this information and keep track of how your parallel processing is performing or if it is being “abused”.
+
+SELECT NAME, VALUE, ROUND((RATIO_TO_REPORT(VALUE) OVER ())*100, 2)|| '%' PERC 
+FROM V$SYSSTAT WHERE NAME LIKE 'Parallel%' ORDER BY NAME DESC;
+
+NAME VALUE
+queries parallelized 56083
+DML statements parallelized 6
+DDL statements parallelized 160
+DFO trees parallelized 56249
+Parallel operations not downgraded 56128
+Parallel operations downgraded to serial 951
+Parallel operations downgraded 75 to 99 pct 0
+Parallel operations downgraded 50 to 75 pct 0
+Parallel operations downgraded 25 to 50 pct 119
+Parallel operations downgraded 1 to 25 pct 2
+
+As you can see from the above information, there have been almost 1000 processes downgraded to serial- no parallel at all, even though it was requested. Also note how many other have been downgraded by percentage. This number is calculated by the number requested, not the calcuation for PARALLEL_THREADS_PER_CPU, (which is most often set to a value of 2) so realize, degradation may be worse than it appears from the results in this query.
+
+
+================
+Latch: Cache Buffer Chains
+
+select 
+      count(*), 
+      sql_id, 
+      nvl(o.object_name,ash.current_obj#) objn,
+      substr(o.object_type,0,10) otype,
+      CURRENT_FILE# fn,
+      CURRENT_BLOCK# blockn
+from  v$active_session_history ash
+    , all_objects o
+where event like 'latch: cache buffers chains'
+  and o.object_id (+)= ash.CURRENT_OBJ# and sample_time >=sysdate-1
+group by sql_id, current_obj#, current_file#,
+               current_block#, o.object_name,o.object_type
+order by count(*)
+/
+==========
+
+How to find SQL,SQL_ID history on Oracle
+Session related Queries
+
+Last/Latest Running SQL
+-----------------------
+set pages 50000 lines 32767
+col "Last SQL" for 100
+SELECT t.inst_id,s.username, s.sid, s.serial#,t.sql_id,t.sql_text "Last SQL"
+FROM gv$session s, gv$sqlarea t
+WHERE s.sql_address =t.address AND
+s.sql_hash_value =t.hash_value
+/
+
+Current Running SQLs
+--------------------
+set pages 50000 lines 32767
+col HOST_NAME for a20
+col EVENT for a40
+col MACHINE for a30
+col SQL_TEXT for a50
+col USERNAME for a15
+
+select sid,serial#,a.sql_id,a.SQL_TEXT,S.USERNAME,i.host_name,machine,S.event,S.seconds_in_wait sec_wait,
+to_char(logon_time,'DD-MON-RR HH24:MI') login
+from gv$session S,gV$SQLAREA A,gv$instance i
+where S.username is not null
+--  and S.status='ACTIVE'
+AND S.sql_address=A.address
+and s.inst_id=a.inst_id and i.inst_id = a.inst_id
+and sql_text not like 'select S.USERNAME,S.seconds_in_wait%'
+/
+
+Current Running SQLs
+--------------------
+set pages 50000 lines 32767
+col program format a20
+col sql_text format a50
+
+select b.sid,b.status,b.last_call_et,b.program,c.sql_id,c.sql_text
+from v$session b,v$sqlarea c
+where b.sql_id=c.sql_id
+/
+
+Last/Latest Running SQL
+----------------------- 
+set pages 50000 lines 32767
+select inst_id,sample_time,session_id,session_serial#,sql_id from gv$active_session_history
+where sql_id is not null 
+order by 1 desc
+/
+
+SQLs Running from longtime
+--------------------------
+alter session set nls_date_format = 'dd/mm/yyyy hh24:mi';
+set pages 50000 lines 32767
+col target format a25
+col opname format a40
+select sid
+      ,opname
+      ,target
+      ,round(sofar/totalwork*100,2)   as percent_done
+      ,start_time
+      ,last_update_time
+      ,time_remaining
+from 
+       v$session_longops
+/
+
+Active Sessions running for more than 1 hour
+---------------------------------------------
+set pages 50000 lines 32767
+col USERNAME for a10
+col MACHINE for a15
+col PROGRAM for a40
+
+SELECT USERNAME,machine,inst_id,sid,serial#,PROGRAM,
+to_char(logon_time,'dd-mm-yy hh:mi:ss AM')"Logon Time",
+ROUND((SYSDATE-LOGON_TIME)*(24*60),1) as MINUTES_LOGGED_ON,
+ROUND(LAST_CALL_ET/60,1) as Minutes_FOR_CURRENT_SQL
+From gv$session
+WHERE STATUS='ACTIVE'
+AND USERNAME IS NOT NULL and ROUND((SYSDATE-LOGON_TIME)*(24*60),1) > 60
+ORDER BY MINUTES_LOGGED_ON DESC;
+
+Session details associated with SID and Event waiting for
+---------------------------------------------------------
+set pages 50000 lines 32767
+col EVENT for a40
+
+select a.sid, a.serial#, a.status, a.program, b.event,to_char(a.logon_time, 'dd-mon-yy hh24:mi') LOGON_TIME,to_char(Sysdate, 'dd-mon-yy-hh24:mi') CURRENT_TIME, (a.last_call_et/3600) "Hrs connected" from v$session a,v$session_wait b where a.sid in(&SIDs) and a.sid=b.sid order by 8;
+
+Session details associated with Oracle SID
+-------------------------------------------
+set head off
+set verify off
+set echo off
+set pages 1500
+set linesize 100
+set lines 120
+prompt
+prompt Details of SID / SPID / Client PID
+prompt ==================================
+select /*+ CHOOSE*/
+'Session  Id.............................................: '||s.sid,
+'Serial Num..............................................: '||s.serial#,
+'User Name ..............................................: '||s.username,
+'Session Status .........................................: '||s.status,
+'Client Process Id on Client Machine ....................: '||'*'||s.process||'*'  Client,
+'Server Process ID ......................................: '||p.spid Server,
+'Sql_Address ............................................: '||s.sql_address,
+'Sql_hash_value .........................................: '||s.sql_hash_value,
+'Schema Name ..... ......................................: '||s.SCHEMANAME,
+'Program  ...............................................: '||s.program,
+'Module .................................................: '|| s.module,
+'Action .................................................: '||s.action,
+'Terminal ...............................................: '||s.terminal,
+'Client Machine .........................................: '||s.machine,
+'LAST_CALL_ET ...........................................: '||s.last_call_et,
+'S.LAST_CALL_ET/3600 ....................................: '||s.last_call_et/3600
+from v$session s, v$process p
+where p.addr=s.paddr and
+s.sid=nvl('&sid',s.sid) 
+/
+set head on
+
+Checking for Active Transactions SID
+------------------------------------
+select username,t.used_ublk,t.used_urec from v$transaction t,v$session s where t.addr=s.taddr;
+
+Session details from Session longops
+-------------------------------------
+select inst_id,SID,SERIAL#,OPNAME,SOFAR,TOTALWORK,START_TIME,LAST_UPDATE_TIME, username from gv$session_longops;
+
+
+Session details with SPID
+-------------------------
+select sid, serial#, USERNAME, STATUS, OSUSER, PROCESS,blocking_session,sql_id
+MACHINE, MODULE, ACTION, to_char(LOGON_TIME,'yyyy-mm-dd hh24:mi:ss')
+from v$session where paddr in (select addr from v$process where spid = &spid)
+/ 
+To find Undo Generated For a given session
+------------------------------------------
+select  username,
+t.used_ublk ,t.used_urec
+from    gv$transaction t,gv$session s
+where   t.addr=s.taddr and
+s.sid='&sid';
+
+To list count of connections from other machines
+------------------------------------------------
+select count(1),machine from gv$session where inst_id='&inst_id' group by machine;
+
+To get total count of sessions and processes
+--------------------------------------------
+select count(*) from v$session;
+
+select count(*) from v$process;
+
+select (select count(*) from v$session) sessions, (select count(*) from v$process) processes from dual;
+
+To find sqltext thru sqladdress
+-------------------------------
+select sql_address from v$session where sid=1999;
+
+select sql_text from v$sqltext where ADDRESS='C00000027FF00AF0' order by PIECE;
+
+To find sqltext for different sql hashvalue
+-------------------------------------------
+select hash_value,sql_text from v$sql where hash_value in (1937378691,1564286875,
+248741712,2235840973,2787402785)
+
+To list long running forms user sessions
+----------------------------------------
+select s.sid,s.process,p.spid,s.status ,s.action,s.module, (s.last_call_et/3600) from
+v$session s, v$process p where round(last_call_et/3600) >4 and action like '%FRM%' and
+p.addr=s.paddr ;
+
+To list inactive Sessions respective username
+---------------------------------------------
+SELECT username,count(*) num_inv_sess
+FROM v$session
+where last_call_et > 3600
+and username is not null
+AND STATUS='INACTIVE'
+group by username
+order by num_inv_sess DESC;
+
+SELECT count(*) FROM v$session where last_call_et > 43200 and username is not null AND
+STATUS='INACTIVE';
+SELECT count(*) FROM v$session where last_call_et > 3600 and username is not null AND
+STATUS='INACTIVE';
+
+To find session id with set of SPIDs
+------------------------------------
+select sid from v$session, v$process where addr=paddr and spid in ('11555','26265','11533');
+
+To find Sql Text given SQLHASH & SQLADDR
+----------------------------------------
+select piece,sql_text from v$sqltext where HASH_VALUE = &hash and ADDRESS ='&addr' order by piece;
+select piece,sql_text from v$sqltext where  ADDRESS ='&addr' order by piece;
+====
+
+Bind Variable values:
+
+SELECT NAME,POSITION,DATATYPE_STRING,VALUE_STRING 
+FROM v$sql_bind_capture WHERE sql_id='';
+
+select * from table ( dbms_xplan.display_cursor ('&Sql_Id',0, 'ADVANCED'));
+
+select * from table (dbms_xplan.display_cursor('&Sql_id', 1(childNumber), format => 'TYPICAL +PEEKED_BINDS'));
+The title pretty much says it. In Oracle 11.2, if you have the Diag+Tuning Pack licenses and the SQL monitoring kicks in for your SQL statement, then instead of the old fashioned ERRORSTACK dump reading you can just query the V$SQL_MONITOR.BIND_XML to find the values and metadata of your SQL statement’s bind variables.
+
+I’ve written an example here:
+
+http://tech.e2sn.com/oracle/troubleshooting/oracle-s-real-time-sql-monitoring-feature-v-sql_monitor
+And a related comment – V$SQL_BIND_CAPTURE is not a reliable way for identifying the current bind variable values in use. Oracle’s bind capture mechanism does not capture every single bind variable into SGA (it would slow down apps which run lots of short statements with bind variables). The bind capture only selectively samples bind values, during the first execution of a new cursor and then every 15 minutes from there (controlled by _cursor_bind_capture_interval parameter), assuming that new executions of that same cursor are still being started (the capture happens only when execution starts, not later during the execution).
+
+select xmltype(binds_xml) from v$sql_monitor where sid = 26 and status = 'EXECUTING';
+
+=============
+Standy Gap
+
+set heading off
+select 'LAST ARCHIVE LOG PRESENT IN THE SYSTEM' FROM DUAL;
+set heading on
+col COMPLETION_TIME for a40
+select min(sequence#),min(COMPLETION_TIME) as COMPLETION_TIME from v$archived_log where DELETED='NO';
+
+select "Standby Synch Status " from dual;
+SELECT INST_NAME,LOG_ARCHIVED, LOG_APPLIED, TIME_APPLIED, LOG_ARCHIVED - LOG_APPLIED LOG_GAP FROM
+(SELECT INST_ID, INSTANCE_NAME INST_NAME, HOST_NAME  FROM GV$INSTANCE ORDER BY INST_ID) NAME,
+(SELECT INST_ID,PROTECTION_MODE, SYNCHRONIZATION_STATUS FROM GV$ARCHIVE_DEST_STATUS WHERE DEST_ID = 2 ORDER BY INST_ID) STAT,
+(SELECT THREAD#, MAX (SEQUENCE#) LOG_ARCHIVED FROM GV$ARCHIVED_LOG WHERE DEST_ID = 1
+AND ARCHIVED = 'YES' AND RESETLOGS_ID = (SELECT MAX (RESETLOGS_ID) FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 1
+AND ARCHIVED = 'YES')  GROUP BY THREAD# ORDER BY THREAD#) ARCH, (SELECT   THREAD#,MAX (SEQUENCE#) LOG_APPLIED,
+TO_CHAR (MAX (COMPLETION_TIME),  'DD-Mon, HH24:MI:SS') TIME_APPLIED FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 2 AND APPLIED = 'YES'
+AND RESETLOGS_ID = (SELECT MAX (RESETLOGS_ID) FROM GV$ARCHIVED_LOG  WHERE DEST_ID = 1 AND ARCHIVED = 'YES') GROUP BY THREAD#
+ORDER BY THREAD#) APPL WHERE NAME.INST_ID = STAT.INST_ID AND NAME.INST_ID = ARCH.THREAD# AND NAME.INST_ID = APPL.THREAD#;
+
+=========
+
+select *
+from dba_hist_active_sess_history
+where sample_time between to_date('19-MAY-17 01:00:00','DD-MON-YY HH24:MI:SS')
+and to_date('19-MAY-17 01:20:00','DD-MON-YY HH24:MI:SS')
+and event like 'row cache%'
+order by sample_id
+/
+
+=========
+This is from TOAD... Below is modified
+
+
+BEGIN
+  SYS.DBMS_SCHEDULER.CREATE_JOB
+    (
+       job_name        => 'SYS.XXEITC_STATS'
+      ,start_date      => TO_TIMESTAMP_TZ('2017/06/02 23:00:00','yyyy/mm/dd hh24:mi:ss.ff tzr')
+      ,repeat_interval => 'FREQ=WEEKLY; BYDAY=FRI'
+      ,end_date        => NULL
+      ,job_class       => 'DEFAULT_JOB_CLASS'
+      ,job_type        => 'PLSQL_BLOCK'
+      ,job_action      => ' BEGIN DBMS_STATS.GATHER_SCHEMA_STATS(ownname=>"XXEITC", estimate_percent=>100, cascade=>TRUE);end;'
+      ,comments        => NULL
+    );
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'RESTARTABLE'
+     ,value     => FALSE);
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'MAX_FAILURES');
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'MAX_RUNS');
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'STOP_ON_WINDOW_CLOSE'
+     ,value     => FALSE);
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'JOB_PRIORITY'
+     ,value     => 3);
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE_NULL
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'SCHEDULE_LIMIT');
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'AUTO_DROP'
+     ,value     => FALSE);
+
+  SYS.DBMS_SCHEDULER.ENABLE
+    (name                  => 'SYS.XXEITC_STATS');
+END;
+/
+================
+
+BEGIN
+  SYS.DBMS_SCHEDULER.CREATE_JOB
+    (
+       job_name        => 'SYS.XXEITC_STATS'
+      ,start_date      => TO_TIMESTAMP_TZ('2017/06/02 23:00:00.000000 +04:00','yyyy/mm/dd hh24:mi:ss.ff tzr')
+      ,repeat_interval => 'FREQ=WEEKLY; BYDAY=FRI'
+      ,end_date        => NULL
+      ,job_class       => 'DEFAULT_JOB_CLASS'
+      ,job_type        => 'PLSQL_BLOCK'
+      ,job_action      => ' BEGIN DBMS_STATS.GATHER_SCHEMA_STATS(ownname=>"XXEITC", estimate_percent=>100, cascade=>TRUE);end;'
+      ,comments        => 'XXEITC_Schema Stats'
+    );
+END;
+/
+
+  SYS.DBMS_SCHEDULER.ENABLE
+    (name => 'SYS.XXEITC_STATS');
+END;
+/
+
+-------------- Modify---------
+BEGIN
+  SYS.DBMS_SCHEDULER.SET_ATTRIBUTE
+    ( name      => 'SYS.XXEITC_STATS'
+     ,attribute => 'AUTO_DROP'
+     ,value     => FALSE);
+END;
+/
+BEGIN
+  SYS.DBMS_SCHEDULER.ENABLE
+    (name => 'SYS.XXEITC_STATS');
+END;
+/
+========================
+
+select dbid, instance_number, snap_id, table_name, error_number
+from DBA_HIST_SNAP_ERROR 
+order by dbid, instance_number, snap_id
+/
+
+===================== Auto space advisor disable/enable ================
+https://jhdba.wordpress.com/tag/dba_autotask_job_history/ --> AWR snaps clearing
+
+set lines 180 pages 1000
+col client_name for a40
+col attributes for a60
+select client_name, status,attributes,service_name from dba_autotask_client
+/
+ 
+BEGIN
+  DBMS_AUTO_TASK_ADMIN.enable(
+    client_name => 'auto space advisor',
+    operation   => NULL,
+    window_name => NULL);
+END;
+/
+ 
+BEGIN
+  DBMS_AUTO_TASK_ADMIN.disable(
+    client_name => 'sql tuning advisor',
+    operation   => NULL,
+    window_name => NULL);
+END;
+/
+ 
+BEGIN
+  DBMS_AUTO_TASK_ADMIN.disable(
+    client_name => 'auto optimizer stats collection',
+    operation   => NULL,
+    window_name => NULL);
+END;
+/
+ 
+select client_name, status,attributes,service_name from dba_autotask_client
+/
+ 
+## Enabling
+BEGIN
+dbms_auto_task_admin.enable(client_name => 'sql tuning advisor', operation => NULL, window_name => NULL);
+END;
+/
+
+SELECT * FROM dba_autotask_schedule;
+
+
+Oracle recommends that you enable automatic optimizer statistics collection. In this case, the database automatically collects optimizer statistics for tables with absent or stale statistics. If fresh statistics are required for a table, then the database collects them both for the table and associated indexes.
+
+Automatic collection eliminates many manual tasks associated with managing the optimizer. It also significantly reduces the risks of generating poor execution plans because of missing or stale statistics.
+
+Automatic optimizer statistics collection calls the DBMS_STATS.GATHER_DATABASE_STATS_JOB_PROC procedure. This internal procedure operates similarly to the DBMS_STATS.GATHER_DATABASE_STATS procedure using the GATHER AUTO option. The main difference is that GATHER_DATABASE_STATS_JOB_PROC prioritizes database objects that require statistics, so that objects that most need updated statistics are processed first, before the maintenance window closes.
+
+BEGIN
+  DBMS_AUTO_TASK_ADMIN.ENABLE(
+    client_name => 'auto optimizer stats collection', 
+    operation => NULL, 
+    window_name => NULL);
+END;
+/
+When you want to disable automatic optimizer statistics collection, you can disable it using the DISABLE procedure in the DBMS_AUTO_TASK_ADMIN package:
+
+BEGIN
+  DBMS_AUTO_TASK_ADMIN.DISABLE(
+    client_name => 'auto optimizer stats collection', 
+    operation => NULL, 
+    window_name => NULL);
+END;
+/
+
+select CLIENT_NAME,WINDOW_NAME,WINDOW_DURATION,JOBS_COMPLETED from DBA_AUTOTASK_CLIENT_HISTORY
+========================================
+
+
+
+Also Can you help to get below command run on current CSG route setup to get the bandwidth requirement for DR site for oracle data guard.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please ask DBA to run the below SQL to get an estimation. It’s also good to run it against current R63 PROD for comparison.
+
+Required bandwidth = ((Redo rate bytes per sec. / 0.7) * 8) / 1,000,000 = bandwidth in Mbps
+
+
+SELECT DT,
+SUM(RB*8/3600000000*1.3) Mbps_REQ_A_DAY,
+MIN(RB*8/3600000000*1.3) MIN_Mbps_REQ_AN_HOUR,
+MAX(RB*8/3600000000*1.3) MAX_Mbps_REQ_AN_HOUR ,
+AVG(RB*8/3600000000*1.3) AVG_Mbps_REQ_AN_HOUR
+FROM(
+SELECT TRUNC (COMPLETION_TIME) DT,
+TO_CHAR (COMPLETION_TIME,’HH24') HH,
+SUM(BLOCKS*BLOCK_SIZE) RB
+FROM
+V$ARCHIVED_LOG
+WHERE COMPLETION_TIME > SYSDATE-5
+AND DEST_ID=1
+GROUP BY TRUNC(COMPLETION_TIME),
+TO_CHAR (COMPLETION_TIME, ‘HH24')
+)
+GROUP BY DT
+order by DT;
+
+/* Formatted on 10/5/2017 1:03:48 PM (QP5 v5.269.14213.34769) */ ======= SQL Query execution history with statistics =============
+  SELECT h.instance_number,
+         TO_CHAR (CAST (s.end_interval_time AS DATE), 'YYYY-MM-DD HH24:MI')
+            end_time,
+         h.plan_hash_value,
+         h.executions_total,
+         TO_CHAR (ROUND (h.rows_processed_total / h.executions_total),
+                  '999,999,999,999')
+            rows_per_exec,
+         TO_CHAR (ROUND (h.elapsed_time_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            et_secs_per_exec,
+         TO_CHAR (ROUND (h.cpu_time_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            cpu_secs_per_exec,
+         TO_CHAR (ROUND (h.iowait_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            io_secs_per_exec,
+         TO_CHAR (ROUND (h.clwait_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            cl_secs_per_exec,
+         TO_CHAR (ROUND (h.apwait_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            ap_secs_per_exec,
+         TO_CHAR (ROUND (h.ccwait_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            cc_secs_per_exec,
+         TO_CHAR (ROUND (h.plsexec_time_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            pl_secs_per_exec,
+         TO_CHAR (ROUND (h.javexec_time_total / h.executions_total / 1e6, 3),
+                  '999,990.000')
+            ja_secs_per_exec
+    FROM dba_hist_sqlstat h, dba_hist_snapshot s
+   WHERE     h.sql_id = '8f4jagj6svnxc'
+         AND h.executions_total > 0
+         AND s.snap_id = h.snap_id
+         AND s.dbid = h.dbid
+         AND s.instance_number = h.instance_number
+ORDER BY s.end_interval_time DESC
+
+
+
+================ SQL execution details ==============
+ set lines 155
+col execs for 999,999,999
+ col avg_etime for 999,999.999
+  col avg_lio for 999,999,999.9
+col begin_interval_time for a30
+  col node for 99999
+ break on begin_interval_time skip 1
+select ss.snap_id, ss.instance_number node, to_char(begin_interval_time,'DD/MM/YY HH24:MI'), S.sql_id,sql_text, plan_hash_value,
+ nvl(executions_delta,0) execs,
+(elapsed_time_delta/decode(nvl(executions_delta,0),0,1,executions_delta))/1000000 avg_etime,
+ (buffer_gets_delta/decode(nvl(buffer_gets_delta,0),0,1,executions_delta)) avg_lio
+from DBA_HIST_SQLSTAT S, DBA_HIST_SNAPSHOT SS,dba_hist_sqltext st
+  where s.sql_id = st.sql_id
+     and ss.snap_id = S.snap_id
+  and ss.instance_number = S.instance_number 
+  and to_char(begin_interval_time,'DD/MM/YY HH24:MI')>='01/08/18 00:00'
+  and executions_delta > 0
+  order by 1, 2, 3
+/ 
+
+select distinct a.sid “waiting sid”,
+d.sql_text “waiting SQL”,
+a.ROW_WAIT_OBJ# “locked object”,
+a.BLOCKING_SESSION “blocking sid”,
+c.sql_text “SQL from blocking session”
+from v$session a, v$active_session_history b, v$sql c, v$sql d
+ where
+ a.sql_id=d.sql_id
+ and a.blocking_session=b.session_id
+ and c.sql_id=b.sql_id
+ and b.CURRENT_OBJ#=a.ROW_WAIT_OBJ#
+ and b.CURRENT_FILE#= a.ROW_WAIT_FILE#
+ and b.CURRENT_BLOCK#= a.ROW_WAIT_BLOCK#
+ 
+ 
+ WITH ash_query AS (
+      SELECT substr(event,6,2) lock_type,program,
+             h.module, h.action,   object_name,
+             SUM(time_waited)/1000 time_ms, COUNT( * ) waits,
+             username, sql_text,
+             RANK() OVER (ORDER BY SUM(time_waited) DESC)
+                 AS time_rank,
+             ROUND(SUM(time_waited) * 100 / SUM(SUM(time_waited))
+                 OVER (), 2)             pct_of_time
+       FROM  v$active_session_history h
+       JOIN  dba_users u  USING (user_id)
+       LEFT OUTER JOIN dba_objects o
+            ON (o.object_id = h.current_obj#)
+       LEFT OUTER JOIN v$sql s USING (sql_id)
+      WHERE event LIKE 'enq: %'
+      GROUP BY substr(event,6,2) ,program, h.module, h.action,
+          object_name,  sql_text, username)
+ SELECT lock_type,module, username,  object_name, time_ms,
+         pct_of_time, sql_text
+ FROM ash_query
+ WHERE time_rank < 11
+ ORDER BY time_rank;
+
+ 
+ WITH sql_app_waits AS
+     (SELECT sql_id, SUBSTR(sql_text, 1, 80) sql_text,
+             application_wait_time/1000 app_time_ms,
+             elapsed_time,
+             ROUND(application_wait_time * 100 /
+                 elapsed_time, 2) app_time_pct,
+             ROUND(application_wait_time * 100 /
+                 SUM(application_wait_time) OVER (), 2)
+                    pct_of_app_time,
+             RANK() OVER (ORDER BY application_wait_Time DESC)
+                    ranking
+        FROM v$sql
+       WHERE elapsed_time > 0 AND application_wait_time>0)
+ SELECT sql_text, app_time_ms, app_time_pct,
+        pct_of_app_time
+ FROM sql_app_waits
+ WHERE ranking <= 10
+ ORDER BY ranking  ;
+
+ =========== Modified of above query for blocking sessions details ==========
+
+SELECT *
+  FROM (  SELECT a.sql_id,
+                 a.session_id,
+                 to_char(a.sample_time,'DD/MM/YY HH24:MI'),
+                 a.blocking_session,
+                 a.user_id,
+                 s.sql_text
+            FROM dba_hist_ACTIVE_SESS_HISTORY a, sys.dba_hist_sqltext s
+           WHERE     a.sql_id = s.sql_id
+                 AND blocking_session_serial# <> 0
+                 AND a.user_id <> 0
+                 AND a.sample_time > SYSDATE - 2
+        ORDER BY a.sample_time)
+;
+ 
+ select * from
+
+           dba_hist_active_sess_history
+
+           where SNAP_ID in ( select snap_id from dba_hist_snapshot where BEGIN_INTERVAL_TIME >            to_timestamp('06-jun-13 10:00:00','dd-mon-yy hh24:mi:ss')
+
+           and BEGIN_INTERVAL_TIME <= to_timestamp('06-jun-13 11:00:00','dd-mon-yy hh24:mi:ss'));

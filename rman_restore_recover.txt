@@ -1,0 +1,67 @@
+Oracle database files/controlfiles and redologs are compressed accidentally....for DMARTPR database.
+
+
+spool /tmp/current_status_info_new.txt 
+set pagesize 20000 
+set linesize 180 
+set pause off 
+set serveroutput on 
+set feedback on 
+set echo on 
+set numformat 999999999999999 
+alter session set nls_date_format = 'dd-mon-yyyy hh24:mi:ss'; 
+archive log list; 
+select name,dbid,controlfile_type,open_mode,log_mode,checkpoint_change#,archive_change# from v$database; 
+select * from v$database_incarnation; 
+col name for a75 
+select * from v$restore_point; 
+select flashback_on from v$database; 
+select file#,name,status,checkpoint_change#,enabled from v$datafile; 
+select file#,name,status,enabled from v$tempfile; 
+select TS#,NAME,INCLUDED_IN_DATABASE_BACKUP,FLASHBACK_ON from v$tablespace; 
+select * from v$recover_file; 
+select * from v$backup; 
+select * from v$log; 
+select * from v$logfile; 
+select file#,name,recover,fuzzy,checkpoint_change#,creation_change#,checkpoint_time,creation_time,RESETLOGS_TIME,status from v$datafile_header; 
+select status, to_char(checkpoint_change#), to_char(checkpoint_time, 'DD-MON-YYYY HH24:MI:SS') as checkpoint_time, 
+count(*) from v$datafile_header 
+group by status, checkpoint_change#, checkpoint_time order by status, checkpoint_change#, checkpoint_time; 
+select count(*),fhsta from x$kcvfh group by fhsta; 
+select count(*),fhrba_seq from x$kcvfh group by fhrba_seq; 
+select count(*),fhscn from x$kcvfh group by fhscn; 
+select count(*),fhafs from x$kcvfh group by fhafs; 
+select min(FHSCN) "LOW FILEHDR SCN" , max(FHSCN) "MAX FILEHDR SCN", max(FHAFS) "Min PITR ABSSCN" from X$KCVFH ; 
+select fhdbn,fhdbi,hxfil,fhsta,fhscn,fhafs,fhrba_seq,fhtnm tbs_name from x$kcvfh; 
+spool off 
+exit 
+
+
+
+http://anuj-singh.blogspot.in/2010/01/oracle-datafile-need-recovery.html
+
+ select checkpoint_change#, 'SYSTEM checkpoint in controlfile' "SCN location" from v$database
+union
+select distinct checkpoint_change#, 'file in controlfile' from v$datafile
+union
+ select distinct checkpoint_change#, 'file header' from v$datafile_header
+
+ 
+ 
+ select hxfil FILENUMBER, fhsta STATUS, fhscn SCN, fhrba_seq SEQUENCE from x$kcvfh
+ The output will look like above.
+
+The STATUS (or fhsta) column has the value of 1 which means the datafile with FILENUMBER needs more recovery. This is the time to apply more archives.
+
+The STATUS is 0 when the recovery is sufficient and it is safe to OPEN the database.
+
+The fhsta can have one of the below values:
+
+0     – DB is consistent. No more recovery required.
+1     – DB needs more recovery. It’s time to apply more archives.
+4     – DB is in a FUZZY state. Was the backup good?
+8192  –
+8196  –
+
+
+

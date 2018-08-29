@@ -1,0 +1,70 @@
+execute dbms_capture_adm.stop_capture('CAPTURE_NAME'); 
+execute dbms_capture_adm.set_parameter('CAPTURE_NAME','_ignore_transaction','TXN_ID'); 
+execute dbms_capture_adm.start_capture('CAPTURE_NAME'); 
+
+
+prompt ++ Current Long Running Transactions ++ 
+prompt Current transactions open for more than 20 minutes 
+
+col runlength HEAD 'Txn Open|Minutes' format 9999.99 
+col sid HEAD 'Session' format a13 
+col xid HEAD 'Transaction|ID' format a18 
+col terminal HEAD 'Terminal' format a10 
+col program HEAD 'Program' format a27 wrap 
+
+select t.inst_id, sid||','||serial# sid,xidusn||'.'||xidslot||'.'||xidsqn xid, (sysdate - start_date )* 1440 
+runlength ,terminal,program from gv$transaction t, gv$session s where t.addr=s.taddr 
+and (sysdate - start_date) * 1440 > 20; 
+
+For ignoring transaction at capture , use the following steps on source site: 
+
+execute dbms_capture_adm.stop_capture('CAPTURE_NAME'); 
+execute dbms_capture_adm.set_parameter('CAPTURE_NAME','_ignore_transaction','TXN_ID'); 
+execute dbms_capture_adm.start_capture('CAPTURE_NAME'); 
+
+
+SELECT ((SYSDATE - CAPTURE_MESSAGE_CREATE_TIME)*86400) LATENCY_SECONDS, 
+((SYSDATE - CAPTURE_TIME)*86400) LAST_STATUS, 
+TO_CHAR(CAPTURE_TIME, 'HH24:MI:SS MM/DD/YY') CAPTURE_TIME, 
+TO_CHAR(CAPTURE_MESSAGE_CREATE_TIME, 'HH24:MI:SS MM/DD/YY') CREATE_TIME 
+FROM V$STREAMS_CAPTURE 
+/
+
+
+COLUMN CAPTURE_NAME HEADING 'Capture|Process|Name' FORMAT A15
+COLUMN QUEUE_NAME HEADING 'Capture|Process|Queue' FORMAT A15
+COLUMN STATUS HEADING 'Capture|Process|Status' FORMAT A15
+SELECT CAPTURE_NAME, QUEUE_NAME,  STATUS
+FROM DBA_CAPTURE;
+
+COLUMN CAPTURE_NAME HEADING 'Capture|Name' FORMAT A15
+COLUMN STATE HEADING 'State' FORMAT A27
+COLUMN STATE_CHANGED HEADING 'State|Change Time'
+COLUMN CREATE_MESSAGE HEADING 'Last Message|Create Time'
+SELECT CAPTURE_NAME,
+STATE,
+TO_CHAR(STATE_CHANGED_TIME, 'HH24:MI:SS MM/DD/YY') STATE_CHANGED,
+TO_CHAR(CAPTURE_MESSAGE_CREATE_TIME, 'HH24:MI:SS MM/DD/YY') CREATE_MESSAGE
+FROM V$STREAMS_CAPTURE;
+
+
+COLUMN APPLY_NAME HEADING 'Apply|Process|Name' FORMAT A15
+COLUMN QUEUE_NAME HEADING 'Apply|Process|Queue' FORMAT A15
+COLUMN STATUS HEADING 'Apply|Process|Status' FORMAT A15
+SELECT APPLY_NAME,
+QUEUE_NAME,
+STATUS
+FROM DBA_APPLY;
+
+COLUMN APPLY_NAME HEADING 'Apply Process|Name' FORMAT A17
+COLUMN 'Latency in Seconds' FORMAT 999999
+COLUMN 'Message Creation' FORMAT A17
+COLUMN 'Apply Time' FORMAT A17
+COLUMN APPLIED_MESSAGE_NUMBER HEADING 'Applied|Message|Number' FORMAT 99999999999999
+SELECT APPLY_NAME,
+(APPLY_TIME-APPLIED_MESSAGE_CREATE_TIME)*86400 "Latency in Seconds",
+TO_CHAR(APPLIED_MESSAGE_CREATE_TIME,'HH24:MI:SS MM/DD/YY')
+"Message Creation",
+TO_CHAR(APPLY_TIME,'HH24:MI:SS MM/DD/YY') "Apply Time",
+APPLIED_MESSAGE_NUMBER
+FROM DBA_APPLY_PROGRESS;
